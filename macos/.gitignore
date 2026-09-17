@@ -1,0 +1,12 @@
+.DS_Store
+DerivedData/
+build/
+*.xcuserstate
+xcuserdata/
+*.xcresult
+*.log
+*.jsonl
+.env*
+.auth*
+node_modules/
+research/

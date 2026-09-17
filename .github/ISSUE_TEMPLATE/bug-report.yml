@@ -1,0 +1,47 @@
+name: Bug report
+description: Report something that is not working.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: "Please do not upload credentials, tokens, authentication files, raw provider responses, private conversations, or terminal history. Review screenshots and logs before attaching them."
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options: [macOS]
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: AgentMeter and OS versions
+    validations:
+      required: true
+  - type: input
+    id: hardware
+    attributes:
+      label: Hardware and displays
+      description: "Mac model, notch or no notch, and internal/external displays."
+  - type: input
+    id: provider
+    attributes:
+      label: Provider, version, and surface
+      description: "Which tool? CLI, desktop, or both?"
+  - type: textarea
+    id: behavior
+    attributes:
+      label: What happened and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Optional sanitized screenshot or diagnostics
+      description: "Do not attach private content or authentication material."

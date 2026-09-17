@@ -1,0 +1,16 @@
+# Local macOS and Xcode output
+.DS_Store
+**/DerivedData/
+**/xcuserdata/
+*.xcuserstate
+*.xcresult/
+*.dSYM/
+*.app/
+*.zip
+*.log
+*.tmp
+.env*
+auth.json
+*credentials*
+*.pfx
+*.key

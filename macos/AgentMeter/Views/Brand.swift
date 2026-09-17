@@ -1,0 +1,81 @@
+import SwiftUI
+
+struct MeterMark: View {
+  var body: some View {
+    HStack(alignment: .bottom, spacing: 3) {
+      ForEach(0..<3) { i in
+        RoundedRectangle(cornerRadius: 1.5).frame(width: 4, height: CGFloat(8 + i * 6))
+      }
+    }.frame(width: 20, height: 22).accessibilityHidden(true)
+  }
+}
+// Bundled vector development marks. No network images or embedded provider app assets.
+struct ProviderMark: View {
+  let provider: ProviderID
+  var size: CGFloat = 22
+  var body: some View {
+    Group {
+      if provider == .codex {
+        Image(systemName: "chevron.left.forwardslash.chevron.right").font(
+          .system(size: size * 0.66, weight: .semibold)
+        ).frame(width: size, height: size)
+      } else {
+        ZStack {
+          ForEach(0..<12) { i in
+            Capsule().frame(width: size * 0.085, height: size * 0.36).offset(y: -size * 0.29)
+              .rotationEffect(.degrees(Double(i) * 30))
+          }
+        }.frame(width: size, height: size)
+      }
+    }.accessibilityHidden(true)
+  }
+}
+extension ProviderID {
+  var accent: Color {
+    self == .codex
+      ? Color(red: 0.19, green: 0.68, blue: 0.55) : Color(red: 0.81, green: 0.46, blue: 0.32)
+  }
+  var notchAccent: Color {
+    self == .codex
+      ? Color(red: 0.45, green: 0.9, blue: 0.77) : Color(red: 1, green: 0.73, blue: 0.56)
+  }
+}
+struct AllowanceBar: View {
+  let remaining: Double?
+  let color: Color
+  var body: some View {
+    GeometryReader { g in
+      ZStack(alignment: .leading) {
+        Capsule().fill(.primary.opacity(0.10))
+        if let remaining { Capsule().fill(color).frame(width: g.size.width * remaining / 100) }
+      }
+    }.frame(height: 5).accessibilityLabel("Remaining allowance").accessibilityValue(
+      remaining.map(UsageSnapshot.percent) ?? "Unknown")
+  }
+}
+enum UsageCopy {
+  static func duration(_ minutes: Int?) -> String? {
+    guard let m = minutes else { return nil }
+    if m % 1440 == 0 { return "\(m/1440) days" }
+    if m % 60 == 0 { return "\(m/60) hours" }
+    return "\(m) minutes"
+  }
+  static func updated(_ date: Date?, now: Date) -> String {
+    guard let date else { return "Not updated yet" }
+    let m = max(0, Int(now.timeIntervalSince(date) / 60))
+    return m < 1 ? "Updated just now" : "Updated \(m)m ago"
+  }
+}
+
+// Official provider artwork, bundled locally; no runtime network loading.
+struct NotchProviderMark: View {
+  let provider: ProviderID
+  var size: CGFloat = 22
+  var body: some View {
+    Image(provider == .codex ? "CodexLogo" : "ClaudeLogo")
+      .resizable()
+      .scaledToFit()
+      .frame(width: size, height: size)
+      .accessibilityHidden(true)
+  }
+}

@@ -1,0 +1,20 @@
+name: Feature request
+description: Suggest a focused improvement.
+labels: [enhancement]
+body:
+  - type: input
+    id: platform
+    attributes:
+      label: macOS version (optional)
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you trying to solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What behavior would help?
+    validations:
+      required: true

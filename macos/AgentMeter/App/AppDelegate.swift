@@ -1,0 +1,353 @@
+import AppKit
+import SwiftUI
+
+@MainActor final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
+  let model = Presentation()
+  private var store: UsageStore!
+  private var activity: ActivityMonitor!
+  private var notch: NotchController!
+  private var window: NSWindow!
+  private var status: NSStatusItem!
+  private var schedule: Task<Void, Never>?
+  private var wake: Task<Void, Never>?
+  private var observers: [NSObjectProtocol] = []
+  private var quitting = false
+  func applicationDidFinishLaunching(_ notification: Notification) {
+    Diagnostics.shared.record("launch")
+    createApplicationMenu()
+    let discovery = ProviderDiscovery()
+    activity = ActivityMonitor { [weak self] snapshot in
+      guard let self, !self.quitting else { return }
+      let previous = self.model.activity
+      self.model.activity = snapshot
+      self.notch?.update(self.model)
+      if previous != snapshot {
+        Diagnostics.shared.record("activity", code: snapshot.name)
+        self.validationEvent("activity")
+      }
+      for p in snapshot.providers where !previous[p].active {
+        Task { await self.store?.refresh(p, onlyIfOlderThan: 15) }
+      }
+    }
+    let discovered: @Sendable (ProviderID, Installation) -> Void = { [weak self] p, install in
+      Task { @MainActor in
+        guard let self, !self.quitting else { return }
+        self.model.installations[p] = install
+        self.activity.update(p, install)
+      }
+    }
+    store = UsageStore(sources: [
+      .codex: ProviderAdapter(provider: .codex, discovery: discovery, discovered: discovered),
+      .claude: ProviderAdapter(provider: .claude, discovery: discovery, discovered: discovered),
+    ]) { [weak self] snapshot in
+      Task { @MainActor in
+        guard let self, !self.quitting else { return }
+        self.model.usage = snapshot
+        self.notch.update(self.model)
+        self.validationEvent("usage")
+      }
+    }
+    model.refreshAction = { [weak self] in self?.manualRefresh() }
+    notch = NotchController(open: { [weak self] in self?.openMain() })
+    model.preferences.changed = { [weak self] in self?.applyPreferences() }
+    applyPreferences()
+    let event = NSAppleEventManager.shared().currentAppleEvent
+    let loginLaunch =
+      event?.eventID == kAEOpenApplication
+      && (event?.paramDescriptor(forKeyword: keyAELaunchedAsLogInItem) != nil
+        || event?.paramDescriptor(forKeyword: keyAEPropData)?.enumCodeValue
+          == keyAELaunchedAsLogInItem)
+    if !loginLaunch { openMain() }
+    activity.start()
+    refresh()
+    schedule = Task { [weak self] in
+      while !Task.isCancelled {
+        do { try await Task.sleep(for: .seconds(30)) } catch { break }
+        self?.refresh()
+      }
+    }
+    observers.append(
+      NSWorkspace.shared.notificationCenter.addObserver(
+        forName: NSWorkspace.willSleepNotification, object: nil, queue: .main
+      ) { [weak self] _ in MainActor.assumeIsolated { self?.sleep() } })
+    observers.append(
+      NSWorkspace.shared.notificationCenter.addObserver(
+        forName: NSWorkspace.didWakeNotification, object: nil, queue: .main
+      ) { [weak self] _ in MainActor.assumeIsolated { self?.didWake() } })
+    startValidationIfRequested()
+  }
+  func applicationDidBecomeActive(_ notification: Notification) { model.loginItem.synchronize() }
+  private func createApplicationMenu() {
+    let main = NSMenu()
+    let appItem = NSMenuItem(title: "AgentMeter", action: nil, keyEquivalent: "")
+    let appMenu = NSMenu(title: "AgentMeter")
+    for (title, action, key) in [
+      ("Settings…", #selector(openSettings), ","), ("Quit AgentMeter", #selector(quit), "q"),
+    ] {
+      let item = NSMenuItem(title: title, action: action, keyEquivalent: key)
+      item.target = self
+      appMenu.addItem(item)
+    }
+    appItem.submenu = appMenu
+    main.addItem(appItem)
+    let windowItem = NSMenuItem(title: "Window", action: nil, keyEquivalent: "")
+    let windowMenu = NSMenu(title: "Window")
+    let open = NSMenuItem(title: "Open AgentMeter", action: #selector(openMain), keyEquivalent: "0")
+    open.target = self
+    windowMenu.addItem(open)
+    windowMenu.addItem(
+      NSMenuItem(title: "Close", action: #selector(NSWindow.performClose(_:)), keyEquivalent: "w"))
+    windowMenu.addItem(
+      NSMenuItem(
+        title: "Minimize", action: #selector(NSWindow.performMiniaturize(_:)), keyEquivalent: "m"))
+    windowItem.submenu = windowMenu
+    main.addItem(windowItem)
+    NSApp.mainMenu = main
+    NSApp.windowsMenu = windowMenu
+  }
+  private func createMenu() {
+    guard status == nil else { return }
+    status = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+    let image = NSImage(size: NSSize(width: 18, height: 18), flipped: false) { _ in
+      NSColor.black.setFill()
+      for (x, h) in [(2, 6), (7, 10), (12, 14)] {
+        NSBezierPath(
+          roundedRect: NSRect(x: x, y: 2, width: 3, height: h), xRadius: 0.5, yRadius: 0.5
+        ).fill()
+      }
+      return true
+    }
+    image.isTemplate = true
+    status.button?.image = image
+    status.button?.toolTip = "AgentMeter"
+    let menu = NSMenu()
+    for (title, selector, key) in [
+      ("Open AgentMeter", #selector(openMain), ""), ("Refresh", #selector(manualRefresh), "r"),
+      ("Settings…", #selector(openSettings), ","),
+      ("Quit", #selector(quit), "q"),
+    ] {
+      if title == "Settings…" { menu.addItem(.separator()) }
+      let item = NSMenuItem(title: title, action: selector, keyEquivalent: key)
+      item.target = self
+      menu.addItem(item)
+    }
+    status.menu = menu
+  }
+  @objc func openMain() {
+    guard !quitting else { return }
+    if window == nil {
+      window = NSWindow(
+        contentRect: NSRect(x: 0, y: 0, width: 850, height: 560),
+        styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered,
+        defer: false)
+      window.title = "AgentMeter"
+      window.minSize = NSSize(width: 630, height: 470)
+      window.titlebarAppearsTransparent = true
+      window.isReleasedWhenClosed = false
+      window.delegate = self
+      window.contentView = NSHostingView(rootView: MainView(model: model))
+      window.center()
+    }
+    model.destination = .usage
+    window.deminiaturize(nil)
+    window.makeKeyAndOrderFront(nil)
+    NSApp.activate(ignoringOtherApps: true)
+    Diagnostics.shared.record("window-open")
+  }
+  private func applyPreferences() {
+    NSApp.appearance = model.preferences.appearance.native
+    if model.preferences.menuEnabled {
+      createMenu()
+    } else if let status {
+      NSStatusBar.system.removeStatusItem(status)
+      self.status = nil
+    }
+    notch?.update(model)
+  }
+  @objc func openSettings() {
+    openMain()
+    model.destination = .settings
+  }
+  @objc func manualRefresh() {
+    guard !quitting, !model.manuallyRefreshing else { return }
+    model.manuallyRefreshing = true
+    Task {
+      await store.refresh()
+      await store.waitForIdle()
+      model.manuallyRefreshing = false
+    }
+  }
+  @objc func refresh() {
+    guard !quitting else { return }
+    Task { await store.refresh() }
+  }
+  @objc func quit() { NSApp.terminate(nil) }
+  func windowWillClose(_ notification: Notification) { Diagnostics.shared.record("window-close") }
+  func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
+  func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows: Bool) -> Bool {
+    openMain()
+    return true
+  }
+  func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+    guard !quitting else { return .terminateLater }
+    quitting = true
+    schedule?.cancel()
+    wake?.cancel()
+    activity.stop()
+    notch.close()
+    if let status { NSStatusBar.system.removeStatusItem(status) }
+    status = nil
+    window?.orderOut(nil)
+    let service = store!
+    Task.detached {
+      await service.stop()
+      Diagnostics.shared.record("quit-clean")
+      RunLoop.main.perform(inModes: [.default, .modalPanel, .eventTracking]) {
+        MainActor.assumeIsolated {
+          self.validationEvent("quit-clean")
+          sender.reply(toApplicationShouldTerminate: true)
+        }
+      }
+    }
+    return .terminateLater
+  }
+  private func sleep() {
+    wake?.cancel()
+    Task { await store.suspend() }
+    Diagnostics.shared.record("sleep")
+  }
+  private func didWake() {
+    wake?.cancel()
+    wake = Task { [weak self] in
+      do { try await Task.sleep(for: .seconds(1)) } catch { return }
+      guard let self, !self.quitting else { return }
+      self.notch.place()
+      self.activity.reconcile()
+      await self.store.resume()
+      Diagnostics.shared.record("wake")
+    }
+  }
+  // Debug-only acceptance instrumentation. No command channel is present in Release.
+  private var validation = false
+  func validationEvent(_ event: String) {
+    #if DEBUG
+      guard validation else { return }
+      let usage: [String: Any] = Dictionary(
+        uniqueKeysWithValues: ProviderID.allCases.map { p in
+          let s = model.usage[p] ?? UsageSnapshot(provider: p)
+          return (
+            p.rawValue,
+            [
+              "status": s.state.rawValue, "version": model.installations[p]?.version ?? "",
+              "windows": s.reading?.windows.map { w -> [String: Any] in
+                [
+                  "id": w.id, "remaining": w.remaining as Any? ?? NSNull(),
+                  "reset": w.reset?.timeIntervalSince1970 as Any? ?? NSNull(),
+                  "minutes": w.durationMinutes as Any? ?? NSNull(),
+                ]
+              } ?? [],
+            ] as [String: Any]
+          )
+        })
+      let value: [String: Any] = [
+        "event": event, "time": Date().timeIntervalSince1970, "pid": getpid(),
+        "activity": model.activity.name, "cliCodex": model.activity.codex.cli,
+        "cliClaude": model.activity.claude.cli, "desktopCodex": model.activity.codex.desktop,
+        "desktopClaude": model.activity.claude.desktop, "notch": notch?.isVisible ?? false,
+        "notchText": notch?.text ?? "", "notchPhase": notch?.phase ?? "hidden",
+        "notchFrame": notch.map { NSStringFromRect($0.frame) } ?? "",
+        "destination": model.destination?.rawValue ?? "",
+        "appearance": model.preferences.appearance.rawValue,
+        "loginEnabled": model.loginItem.enabled, "loginMessage": model.loginItem.message ?? "",
+        "notchEnabled": model.preferences.notchEnabled,
+        "focusPreserved": notch?.focusPreserved ?? true,
+        "window": window?.isVisible ?? false, "windowNumber": window?.windowNumber ?? 0,
+        "menuItem": status?.button != nil,
+        "mainFullscreen": window?.styleMask.contains(.fullScreen) ?? false,
+        "notchOnActiveSpace": notch?.onActiveSpace ?? false,
+        "notchOnScreen": notch?.onScreen ?? false, "usage": usage,
+      ]
+      if let d = try? JSONSerialization.data(withJSONObject: value, options: .sortedKeys) {
+        print(String(decoding: d, as: UTF8.self))
+        fflush(stdout)
+      }
+    #endif
+  }
+  private func startValidationIfRequested() {
+    #if DEBUG
+      let args = CommandLine.arguments
+      guard let i = args.firstIndex(of: "--validation-script"), args.indices.contains(i + 1) else {
+        return
+      }
+      let url = URL(fileURLWithPath: args[i + 1]).resolvingSymlinksInPath()
+      let root =
+        FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
+        .appendingPathComponent("AgentMeter/Phase1Test").path + "/"
+      guard url.path.hasPrefix(root),
+        let size = try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize, size < 32768,
+        let data = try? Data(contentsOf: url), let commands = try? J.parse(data).array
+      else { return }
+      validation = true
+      validationEvent("ready")
+      for item in commands {
+        guard let seconds = item["at"].number, seconds >= 0, seconds <= 900,
+          let command = item["command"].string
+        else { continue }
+        DispatchQueue.main.asyncAfter(deadline: .now() + seconds) { [weak self] in
+          guard let self, !self.quitting else { return }
+          switch command {
+          case "menu-open": self.status?.menu?.performActionForItem(at: 0)
+          case "menu-refresh": self.status?.menu?.performActionForItem(at: 1)
+          case "menu-quit": self.status?.menu?.performActionForItem(at: 4)
+          case "open": self.openMain()
+          case "settings": self.openSettings()
+          case "login-on": self.model.loginItem.setEnabled(true)
+          case "login-off": self.model.loginItem.setEnabled(false)
+          case "hover": self.notch.setHover(true)
+          case "click-notch": self.notch.clickForValidation()
+          case "narrow": self.window.setContentSize(NSSize(width: 640, height: 600))
+          case "wide": self.window.setContentSize(NSSize(width: 850, height: 560))
+          case "unhover": self.notch.setHover(false)
+          case "notch-off": self.model.preferences.notchEnabled = false
+          case "notch-on": self.model.preferences.notchEnabled = true
+          case "menu-off": self.model.preferences.menuEnabled = false
+          case "menu-on": self.model.preferences.menuEnabled = true
+          case "light": self.model.preferences.appearance = .light
+          case "dark": self.model.preferences.appearance = .dark
+          case "system": self.model.preferences.appearance = .system
+          case "capture":
+            if let name = item["name"].string,
+              name.range(of: "^[a-z0-9-]+$", options: .regularExpression) != nil
+            {
+              let file = URL(fileURLWithPath: root).appendingPathComponent(name + ".png")
+              if item["surface"].string == "notch" {
+                self.notch.capture(to: file)
+              } else if let view = self.window.contentView,
+                let bitmap = view.bitmapImageRepForCachingDisplay(in: view.bounds)
+              {
+                view.cacheDisplay(in: view.bounds, to: bitmap)
+                try? bitmap.representation(using: .png, properties: [:])?.write(to: file)
+              }
+            }
+          case "close": self.window.performClose(nil)
+          case "refresh": self.refresh()
+          case "quit": self.quit()
+          case "activate":
+            let allowed = [
+              "com.apple.Safari", "com.apple.Terminal", "com.openai.codex",
+              "com.anthropic.claudefordesktop",
+            ]
+            if let bundle = item["bundle"].string, allowed.contains(bundle) {
+              NSWorkspace.shared.runningApplications.first { $0.bundleIdentifier == bundle }?
+                .activate(options: [])
+            }
+          case "fullscreen": self.window.toggleFullScreen(nil)
+          case "wake": self.didWake()
+          default: break
+          }
+          self.validationEvent(command)
+        }
+      }
+    #endif
+  }
+}
