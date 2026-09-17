@@ -848,7 +848,7 @@
 				<key>MARKETING_VERSION</key>
 				<string>0.1.0</string>
 				<key>CURRENT_PROJECT_VERSION</key>
-				<string>1</string>
+				<string>2</string>
 				<key>PRODUCT_BUNDLE_IDENTIFIER</key>
 				<string>local.agentmeter.mac</string>
 				<key>INFOPLIST_FILE</key>
@@ -884,7 +884,7 @@
 				<key>MARKETING_VERSION</key>
 				<string>0.1.0</string>
 				<key>CURRENT_PROJECT_VERSION</key>
-				<string>1</string>
+				<string>2</string>
 				<key>PRODUCT_BUNDLE_IDENTIFIER</key>
 				<string>local.agentmeter.mac</string>
 				<key>INFOPLIST_FILE</key>
@@ -897,6 +897,12 @@
 				<string>2</string>
 				<key>DEBUG_INFORMATION_FORMAT</key>
 				<string>dwarf-with-dsym</string>
+				<key>DEPLOYMENT_POSTPROCESSING</key>
+				<string>YES</string>
+				<key>STRIP_INSTALLED_PRODUCT</key>
+				<string>YES</string>
+				<key>STRIP_STYLE</key>
+				<string>debugging</string>
 			</dict>
 		</dict>
 		<key>06CB67C35A91E16DBD17B949</key>

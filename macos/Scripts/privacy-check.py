@@ -21,6 +21,10 @@ if len(sys.argv)>1:
  app=Path(sys.argv[1]);built=plistlib.loads((app/'Contents/Info.plist').read_bytes())
  errors += [f'Built app privacy description: {k}' for k in built if k.endswith('UsageDescription')]
  binary=app/'Contents/MacOS'/built['CFBundleExecutable']
+ # Inspect every byte, including Mach-O symbol tables that default strings skips.
+ data=binary.read_bytes()
+ if re.search(rb'/(?:Users|home)/[^/\x00\s]+/',data):errors.append('Built executable contains absolute development-home paths')
+ if b'--validation-script' in data:errors.append('Built executable contains Debug acceptance entry point')
  links=subprocess.check_output(['/usr/bin/otool','-L',str(binary)],text=True)
  for framework in ['MusicKit','MediaPlayer','StoreKit']:
   if '/'+framework+'.framework/' in links:errors.append(f'Unexpected media/store framework: {framework}')

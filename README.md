@@ -8,7 +8,7 @@ A small native macOS utility for keeping an eye on coding-agent usage. A context
 
 ## Download
 
-**[Download macOS Beta](https://github.com/Praneshsivasankaran/AgentMeter/releases/tag/macos-0.1.0-beta.2)** — 0.1.0 beta 2, for macOS 14 or later.
+**[Download macOS Beta](https://github.com/Praneshsivasankaran/AgentMeter/releases/tag/macos-0.1.0-beta.3)** — 0.1.0 beta 3, for macOS 14 or later.
 
 This technical beta is **not Developer ID signed or notarized** and may be blocked by Gatekeeper. [Read the installation notes](docs/macos/INSTALL.md) before opening it, or [build from source](docs/macos/BUILD.md).
 

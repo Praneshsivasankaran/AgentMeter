@@ -1,4 +1,4 @@
-# macOS 0.1.0-beta.2
+# macOS 0.1.0-beta.3
 
 Public technical beta. Native usage window, menu-bar controls, and a contextual notch/top-edge monitor. Hover expands the primary allowance; clicking opens the application.
 
@@ -8,6 +8,8 @@ Public technical beta. Native usage window, menu-bar controls, and a contextual 
 - Local ad-hoc build only. Developer ID signed: **No**. Notarized: **No**.
 - Gatekeeper assessment: **rejected — no usable signature**. The archive is for users comfortable evaluating an unsigned technical beta; signed/notarized packaging remains a future step.
 
-The native bundle version is 0.1.0 (build 1), with release version 0.1.0-beta.2 shown in About.
+Release packaging strips debug-symbol paths from the distributed executable; symbols remain outside the application bundle. The privacy audit checks all binary sections.
+
+The native bundle version is 0.1.0 (build 2), with release version 0.1.0-beta.3 shown in About.
 
 Found something broken? [Open an issue](https://github.com/Praneshsivasankaran/AgentMeter/issues/new/choose) without credentials or private content.

@@ -11,14 +11,16 @@ python3 macos/Scripts/privacy-check.py "$HOME/Library/Developer/Xcode/DerivedDat
 open "$HOME/Library/Developer/Xcode/DerivedData/AgentMeter/Build/Products/Release/AgentMeter.app"
 ```
 
+Release packaging removes debugging symbols from the app executable. Keep generated dSYM bundles local; do not add them to the beta ZIP. The privacy check inspects all binary bytes for development-home paths.
+
 Build output belongs under Library, outside protected document folders. No provider login, provider installation, signing certificate, or third-party package installation is needed to compile or run synthetic tests. Real usage appears only when supported tools are installed and signed in.
 
 To make a technical beta ZIP after validation:
 
 ```sh
 mkdir -p "$HOME/Library/Caches/AgentMeterBeta"
-ditto -c -k --sequesterRsrc --keepParent "$HOME/Library/Developer/Xcode/DerivedData/AgentMeter/Build/Products/Release/AgentMeter.app" "$HOME/Library/Caches/AgentMeterBeta/AgentMeter-0.1.0-beta.2-macos.zip"
-shasum -a 256 "$HOME/Library/Caches/AgentMeterBeta/AgentMeter-0.1.0-beta.2-macos.zip"
+ditto -c -k --norsrc --noextattr --keepParent "$HOME/Library/Developer/Xcode/DerivedData/AgentMeter/Build/Products/Release/AgentMeter.app" "$HOME/Library/Caches/AgentMeterBeta/AgentMeter-0.1.0-beta.3-macos.zip"
+shasum -a 256 "$HOME/Library/Caches/AgentMeterBeta/AgentMeter-0.1.0-beta.3-macos.zip"
 ```
 
 This creates a local ad-hoc build, not Developer ID signing or notarization. Builds are source-reproducible; byte-identical archives are not promised. The macOS workflow uses GitHub's `xcode-27` preview runner with synthetic tests and no provider authentication or signing secrets. Preview runner availability may vary; no passing badge is advertised until a real run completes.
