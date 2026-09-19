@@ -1,5 +1,7 @@
-# macOS screenshots
+# macOS captures
 
-Usage, notch images, and the short demo were captured from the integrated 0.1.0-beta.2 Release application with live provider readings. Settings is an actual window capture from the same version’s Debug build, using its existing test control to select that screen; the displayed views are shared with Release. No account identifiers, conversations, or project contents are shown. The notch captures use a neutral desktop backdrop. Percentages are the actual readings at capture time.
+`usage.png`, `settings.png`, and `notch-compact.png` are actual 0.1.0-beta.3 Release captures, refreshed on September 19, 2026. The window captures omit the operating-system title bar; UI content and live percentages are unmodified. No debug controls or simulated data were used.
 
-The short demo records real CLI activity, appearance, pointer-driven hover expansion, and disappearance after session exit. It is cropped to the monitor area; a screenshot cannot reproduce the display hardware camera cutout. No mock UI or invented usage is used.
+`notch-expanded.png` is the retained real two-provider Release capture from September 17. It shows the same current expanded UI against a neutral background. Readings naturally vary over time. Only four screenshots are retained.
+
+The current GIF records real session appearance and pointer-driven hover from the earlier Release capture. A new capture including click-to-open is being prepared. No private conversations, account identifiers, or project content are included. Screen captures do not reproduce the physical camera cutout.

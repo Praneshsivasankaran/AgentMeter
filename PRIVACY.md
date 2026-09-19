@@ -1,6 +1,6 @@
 # Privacy
 
-AgentMeter has no account system, telemetry, analytics, or backend. It reads allowance through the coding tools you have already installed and authenticated. Those tools may contact their own services under their own settings and terms; AgentMeter does not send model prompts during usage checks.
+AgentMeter has no account system, telemetry, analytics, or backend. It reads allowance through the Codex and Claude Code tools you have already installed and authenticated. Those tools may contact their own services under their own settings and terms; AgentMeter does not send model prompts during usage checks.
 
 AgentMeter does not copy or store provider credentials. Account continuity is checked in memory so a result cannot silently cross accounts. Usage snapshots stay in memory, and no usage history is saved.
 

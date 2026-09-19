@@ -24,3 +24,5 @@ shasum -a 256 "$HOME/Library/Caches/AgentMeterBeta/AgentMeter-0.1.0-beta.3-macos
 ```
 
 This creates a local ad-hoc build, not Developer ID signing or notarization. Builds are source-reproducible; byte-identical archives are not promised. The macOS workflow uses GitHub's `xcode-27` preview runner with synthetic tests and no provider authentication or signing secrets. Preview runner availability may vary; no passing badge is advertised until a real run completes.
+
+For an unsigned DMG rehearsal and the future signing/notarization steps, see [Distribution](DISTRIBUTION.md).

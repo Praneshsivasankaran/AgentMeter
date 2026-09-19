@@ -14,3 +14,11 @@ auth.json
 *credentials*
 *.pfx
 *.key
+
+# Local distribution output and signing material
+/dist/
+*.dmg
+*.p8
+*.p12
+*.mobileprovision
+*.provisionprofile

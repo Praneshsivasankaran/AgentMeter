@@ -1,33 +1,64 @@
 name: Bug report
-description: Report something that is not working.
+description: Report an AgentMeter problem with Codex or Claude Code monitoring.
 labels: [bug]
 body:
   - type: markdown
     attributes:
-      value: "Please do not upload credentials, tokens, authentication files, raw provider responses, private conversations, or terminal history. Review screenshots and logs before attaching them."
+      value: "Do not upload credentials, auth files, API keys, tokens, cookies, private prompts/responses, source code, or full terminal history. No serial numbers. Review screenshots and logs before attaching them."
+  - type: input
+    id: app-version
+    attributes:
+      label: AgentMeter version
+    validations:
+      required: true
+  - type: input
+    id: macos-version
+    attributes:
+      label: macOS version
+    validations:
+      required: true
+  - type: input
+    id: model
+    attributes:
+      label: Mac model
+      description: "For example, MacBook Air M2. Do not include a serial number."
+    validations:
+      required: true
   - type: dropdown
-    id: platform
+    id: architecture
     attributes:
-      label: Platform
-      options: [macOS]
+      label: Architecture
+      options: [Apple Silicon, Intel, Unknown]
     validations:
       required: true
-  - type: input
-    id: versions
+  - type: dropdown
+    id: notch
     attributes:
-      label: AgentMeter and OS versions
+      label: Built-in display has a notch
+      options: ['Yes', 'No', Unknown]
     validations:
       required: true
-  - type: input
-    id: hardware
+  - type: dropdown
+    id: external-display
     attributes:
-      label: Hardware and displays
-      description: "Mac model, notch or no notch, and internal/external displays."
+      label: External display connected
+      options: ['Yes', 'No']
+    validations:
+      required: true
   - type: input
     id: provider
     attributes:
-      label: Provider, version, and surface
-      description: "Which tool? CLI, desktop, or both?"
+      label: Codex or Claude Code version
+      description: "Include versions for each affected CLI or desktop app."
+    validations:
+      required: true
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Affected surface
+      options: [CLI, Desktop, Both, Neither]
+    validations:
+      required: true
   - type: textarea
     id: behavior
     attributes:
@@ -44,4 +75,4 @@ body:
     id: evidence
     attributes:
       label: Optional sanitized screenshot or diagnostics
-      description: "Do not attach private content or authentication material."
+      description: "No private content, authentication material, or full terminal history."
