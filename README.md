@@ -1,48 +1,61 @@
 # AgentMeter
 
-AgentMeter is a lightweight native macOS utility for monitoring Codex and Claude Code usage.
+*Codex and Claude Code usage, at a glance.*
 
-It runs locally, detects supported sessions, and shows remaining allowance through a compact MacBook notch monitor, menu-bar utility, and full usage window. No AgentMeter account. No telemetry.
+AgentMeter monitors Codex and Claude Code usage on **macOS and Windows**, with a native usage window and a compact monitor that appears when supported sessions are active.
 
-![AgentMeter's real contextual notch monitor appearing and expanding on hover](assets/demo/agentmeter-macos.gif)
+## Download AgentMeter
 
-## Download — macOS Beta
+| | macOS | Windows |
+| --- | --- | --- |
+| **Store** | Mac App Store — **Coming soon** | Microsoft Store — **Coming soon** |
+| **Direct download** | [GitHub Release · Public beta](https://github.com/Praneshsivasankaran/AgentMeter/releases/tag/macos-0.1.0-beta.3) | GitHub Release — **Coming soon** |
+| **Status** | Public beta; Apple signing, notarization and App Store distribution pending | Microsoft Store submission candidate; Store publication pending |
+| **Source** | [`/macos`](macos/) | [`/windows`](windows/) |
 
-**[AgentMeter for macOS — Beta](https://github.com/Praneshsivasankaran/AgentMeter/releases/tag/macos-0.1.0-beta.3)** · 0.1.0 beta 3 · macOS 14 or later
+The macOS beta requires macOS 14 or later and is currently unsigned. Read the [installation notes](docs/macos/INSTALL.md); do not disable Gatekeeper. Windows source targets Windows 10 version 2004 or later, x64. Neither Store release is live yet.
 
-The current beta is unsigned while Apple Developer enrollment is being processed. A signed and notarized build is planned next. Gatekeeper may block this build; read the [installation notes](docs/macos/INSTALL.md), or [build from source](docs/macos/BUILD.md). Do not disable Gatekeeper.
+GitHub is AgentMeter's official product, source and direct-download home. Direct builds for both platforms are planned; [distribution requirements](docs/DISTRIBUTION.md) apply independently to each channel.
+
+## See it in action
+
+| macOS | Windows |
+| --- | --- |
+| ![Real macOS Usage window](assets/screenshots/macos/usage.png) | ![Real Windows Usage window](assets/screenshots/windows/usage.png) |
+| Native SwiftUI and AppKit | Native Windows Forms |
+
+**macOS notch monitor**
+
+![Real macOS notch monitor appearing and expanding on hover](assets/demo/agentmeter-macos.gif)
+
+**Windows desktop monitor**
+
+| Compact | Expanded on hover |
+| --- | --- |
+| ![Real Windows compact Codex monitor](assets/screenshots/windows/codex-compact.png) | ![Real Windows expanded Codex monitor](assets/screenshots/windows/codex-expanded.png) |
+
+[More screenshots and capture details](assets/screenshots/README.md). Windows views are separate real captures, not an animation.
 
 ## What it does
 
-- Shows verified Codex and Claude Code allowance, with explicit loading, stale, and unavailable states.
-- Appears around the notch while a supported session is active; uses a top-edge monitor on other Macs.
-- Expands on hover for the primary allowance and reset time; opens the full Usage window on click.
-- Provides menu-bar controls, Launch at Login, and System, Light, and Dark appearance.
+- Shows remaining allowance, reset information and explicit loading, stale and unavailable states.
+- Keeps Codex and Claude Code independent so one unavailable provider does not block the other.
+- Shows a contextual notch/top-edge monitor on macOS and a movable desktop monitor on Windows.
+- Expands on hover, opens Usage on click, and provides native menu-bar or tray controls.
+- Supports optional launch at login/startup and System, Light and Dark appearance.
 
-Desktop apps count while frontmost with a visible window. Recognized interactive CLI sessions count while open, including when idle. The monitor disappears when activity ends.
-
-<img src="assets/screenshots/macos/usage.png" width="760" alt="AgentMeter Usage window showing Codex and Claude Code remaining allowance and reset times">
-
-[Expanded notch](assets/screenshots/macos/notch-expanded.png) · [Settings](assets/screenshots/macos/settings.png)
-
-## How it works
-
-AgentMeter reads usage every 30 seconds through your existing locally installed, authenticated Codex CLI and standalone Claude Code. Desktop apps can trigger the monitor, but allowance comes from those CLI tools. Use the same subscription account across clients. AgentMeter never asks for API keys. Provider interfaces can change; unknown CLI modes deliberately do not trigger activity.
+AgentMeter refreshes every 30 seconds through your separately installed, authenticated Codex CLI and standalone Claude Code. Desktop apps can trigger the monitor; allowance comes from those CLI tools. Use the same subscription account across clients. Provider interfaces can change, and unavailable values are never estimated.
 
 ## Privacy
 
-AgentMeter runs locally with no account, telemetry, analytics, or backend. It does not inspect prompts, responses, source code, or terminal contents, and does not store provider credentials. Authentication remains with the provider tools, which contact their own services. [Privacy details](PRIVACY.md).
+No AgentMeter account, telemetry, analytics or backend. AgentMeter does not read prompts, responses, source code, terminal contents or keystrokes, and does not copy provider credentials. Usage checks send no model prompts. Provider tools retain their own authentication and contact their own services. [Privacy policy](PRIVACY.md).
 
-## Build from source
+## Source and contributions
 
-[Build and test instructions](docs/macos/BUILD.md) · Swift, SwiftUI, and AppKit in `macos/`.
+[macOS build and tests](docs/macos/BUILD.md) · [Windows build and tests](docs/windows/BUILD.md) · [Shared product specification](docs/product-spec/README.md)
 
-Release builds include Apple Silicon and Intel. Runtime testing is currently on an M2 MacBook Air; Intel and broader display coverage need beta testing.
+Product behavior is specified together and implemented natively on each platform. Start with the shared specification when proposing a change, and identify any platform differences.
 
-## Testing the beta
+[Report an issue](https://github.com/Praneshsivasankaran/AgentMeter/issues/new/choose) · [Contribute](CONTRIBUTING.md) · [Report a security concern](SECURITY.md)
 
-[Try the short beta checklist](docs/macos/BETA-TESTING.md) and [report bugs](https://github.com/Praneshsivasankaran/AgentMeter/issues/new/choose). Please omit credentials and private content. [Contributing](CONTRIBUTING.md) · [Security reports](SECURITY.md).
-
-## License
-
-AgentMeter source is [MIT licensed](LICENSE). [Third-party components, logos, and trademarks retain their respective terms](THIRD-PARTY-NOTICES.md). AgentMeter is not affiliated with or endorsed by OpenAI or Anthropic.
+AgentMeter's original source is [MIT licensed](LICENSE). [Third-party materials and trademarks retain their own terms](THIRD-PARTY-NOTICES.md). AgentMeter is independent of OpenAI and Anthropic.

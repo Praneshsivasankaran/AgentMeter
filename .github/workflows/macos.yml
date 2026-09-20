@@ -17,6 +17,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Toolchain
         run: xcodebuild -version
+      - name: Public source hygiene
+        run: python3 scripts/check-public-tree.py
       - name: Clean Release build
         run: xcodebuild -project macos/AgentMeter.xcodeproj -scheme AgentMeter -configuration Release -derivedDataPath "$HOME/Library/Developer/Xcode/DerivedData/AgentMeter" -destination 'platform=macOS' clean build
       - name: Synthetic tests

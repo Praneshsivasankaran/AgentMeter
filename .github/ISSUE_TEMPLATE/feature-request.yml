@@ -1,11 +1,14 @@
 name: Feature request
-description: Suggest a focused improvement.
+description: Suggest a focused product improvement.
 labels: [enhancement]
 body:
-  - type: input
+  - type: dropdown
     id: platform
     attributes:
-      label: macOS version (optional)
+      label: Platforms affected
+      options: [Both platforms, macOS, Windows]
+    validations:
+      required: true
   - type: textarea
     id: problem
     attributes:
@@ -15,6 +18,7 @@ body:
   - type: textarea
     id: proposal
     attributes:
-      label: What behavior would help?
+      label: Proposed behavior and platform considerations
+      description: "Consider the shared product specification and explain any native platform differences."
     validations:
       required: true

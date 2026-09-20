@@ -1,0 +1,340 @@
+using System.ComponentModel;
+using System.Net.NetworkInformation;
+using AgentMeter.Core;
+using Microsoft.Win32;
+
+namespace AgentMeter;
+
+internal sealed class TrayContext : ApplicationContext
+{
+    private readonly RefreshCoordinator coordinator;
+    private readonly DiagnosticLog log;
+    private readonly UsageForm popup;
+    private readonly MonitorForm monitor;
+    private readonly MonitorPositionStore positions;
+    private readonly IStartupRegistration startup;
+    private readonly NotifyIcon tray;
+    private readonly Icon icon = AppIcon.Load();
+    private Icon trayIcon = AppIcon.Load(SystemInformation.SmallIconSize.Width);
+    private readonly ContextMenuStrip menu = new();
+    private readonly ToolStripMenuItem pinMenu;
+    private readonly ToolStripMenuItem startupMenu = new("Start with Windows");
+    private readonly System.Windows.Forms.Timer poll = new() { Interval = 30_000 };
+    private readonly System.Windows.Forms.Timer display = new() { Interval = 30_000 };
+    private readonly System.Windows.Forms.Timer recovery = new() { Interval = 5_000 };
+    private readonly System.Windows.Forms.Timer activityTimer = new() { Interval = 1000 };
+    private readonly Func<ActivitySnapshot> captureActivity;
+    private readonly PreferenceStore preferenceStore;
+    private Preferences preferences;
+    private ActivitySnapshot activity = ActivitySnapshot.Empty;
+    private Task activityTask = Task.CompletedTask;
+    private readonly CancellationTokenSource lifetime = new();
+    private readonly RegisteredWaitHandle showWait;
+    private readonly RegisteredWaitHandle? quitWait;
+    private readonly List<Task> refreshes = [];
+    private Task activeRefresh = Task.CompletedTask;
+    private bool exiting;
+    private bool disposed;
+    private bool suspended;
+
+    public TrayContext(RefreshCoordinator coordinator, DiagnosticLog log, EventWaitHandle showEvent,
+        MonitorPositionStore? positions = null, IStartupRegistration? startup = null, EventWaitHandle? quitEvent = null,
+        Func<ActivitySnapshot>? captureActivity = null, PreferenceStore? preferenceStore = null)
+    {
+        this.coordinator = coordinator;
+        this.log = log;
+        this.positions = positions ?? MonitorPositionStore.Default(log.Write);
+        this.startup = startup ?? (PackagedEnvironment.HasIdentity
+            ? new PackagedStartupRegistration(new WindowsStartupTaskAccess(), log.Write)
+            : new StartupRegistration(Environment.ProcessPath ?? Application.ExecutablePath, log.Write));
+        this.captureActivity = captureActivity ?? new WindowsActivitySource().Capture;
+        this.preferenceStore = preferenceStore ?? PreferenceStore.Default();
+        preferences = this.preferenceStore.Load();
+        Palette.Apply(preferences.Appearance);
+        var names = coordinator.States.Select(s => s.Name).ToArray();
+        popup = new UsageForm(names, icon);
+        monitor = new MonitorForm(names, icon);
+        tray = new NotifyIcon { Icon = trayIcon, Text = "AgentMeter — loading", ContextMenuStrip = menu, Visible = true };
+        menu.Items.Add("Open AgentMeter", null, (_, _) => ShowPopup());
+        pinMenu = new ToolStripMenuItem("Pin Monitor", null, (_, _) => { if (monitor.Visible) UnpinMonitor(); else OpenMonitor(); });
+        menu.Items.Add("Refresh", null, (_, _) => StartRefresh());
+        menu.Items.Add("Settings", null, (_, _) => { ShowPopup(); popup.ShowSettings(); });
+        startupMenu.Click += (_, _) => ToggleStartup();
+        menu.Opening += (_, _) => UpdateStartupState();
+        menu.Items.Add("Quit", null, async (_, _) => await ExitAsync());
+        tray.MouseClick += (_, e) => { if (e.Button == MouseButtons.Left) ShowPopup(); };
+        popup.RefreshRequested += StartRefresh;
+        popup.ExitRequested += async () => await ExitAsync();
+        popup.PinRequested += OpenMonitor;
+        popup.StartupToggleRequested += ToggleStartup;
+        popup.MenuOpening += UpdateStartupState;
+        popup.PreferencesChanged += ChangePreferences;
+        popup.SetPreferences(preferences);
+        tray.Visible = preferences.TrayIcon;
+        monitor.OpenRequested += ShowPopup;
+        monitor.UnpinRequested += UnpinMonitor;
+        monitor.RefreshRequested += StartRefresh;
+        monitor.ExitRequested += async () => await ExitAsync();
+        monitor.PositionCommitted += SavePosition;
+        monitor.SurfaceFallbackUsed += () => log.Write("monitor.opaque-fallback");
+        popup.VisibleChanged += (_, _) =>
+        {
+            UpdateDisplayTimer();
+            log.Write(popup.Visible ? "panel.shown" : "panel.hidden");
+        };
+        monitor.VisibleChanged += (_, _) =>
+        {
+            UpdateDisplayTimer();
+            pinMenu.Text = monitor.Visible ? "Unpin Monitor" : "Pin Monitor";
+            log.Write(monitor.Visible ? "monitor.shown" : "monitor.hidden");
+        };
+        coordinator.Changed += OnChanged;
+        poll.Tick += (_, _) => StartRefresh();
+        display.Tick += (_, _) => Render();
+        recovery.Tick += (_, _) =>
+        {
+            recovery.Stop();
+            if (suspended || exiting) return;
+            poll.Stop(); poll.Start();
+            StartRefresh();
+        };
+        activityTimer.Tick += (_, _) => SampleActivity();
+        showWait = ThreadPool.RegisterWaitForSingleObject(showEvent, (_, _) => OnUi(ShowPopup), null, Timeout.Infinite, false);
+        if (quitEvent is not null)
+            quitWait = ThreadPool.RegisterWaitForSingleObject(quitEvent, (_, _) => OnUi(async () => await ExitAsync()), null, Timeout.Infinite, false);
+        SystemEvents.DisplaySettingsChanged += OnDisplaySettingsChanged;
+        SystemEvents.PowerModeChanged += OnPowerModeChanged;
+        SystemEvents.TimeChanged += OnTimeChanged;
+        SystemEvents.UserPreferenceChanged += OnUserPreferenceChanged;
+        NetworkChange.NetworkAvailabilityChanged += OnNetworkAvailabilityChanged;
+        NetworkChange.NetworkAddressChanged += OnNetworkAddressChanged;
+        UpdateStartupState();
+        poll.Start();
+        StartRefresh();
+        activityTimer.Start(); SampleActivity();
+        if (!preferences.TrayIcon) ShowPopup();
+        log.Write("tray.ready");
+    }
+
+    internal void OpenPanel() => ShowPopup();
+
+    private void OnUserPreferenceChanged(object sender, UserPreferenceChangedEventArgs e) => OnUi(() =>
+    { Palette.Apply(preferences.Appearance); popup.ApplyTheme(); monitor.UpdateSurface(); });
+
+    private void ChangePreferences(Preferences value)
+    {
+        if (!preferenceStore.Save(value)) { popup.SetPreferences(preferences); popup.PreferenceSaveFailed(); return; }
+        preferences = value; tray.Visible = value.TrayIcon;
+        Palette.Apply(value.Appearance); popup.SetPreferences(value); monitor.UpdateSurface(); ApplyActivity(activity);
+    }
+
+    private void SampleActivity()
+    {
+        if (exiting || suspended || !activityTask.IsCompleted) return;
+        activityTask = SampleActivityAsync();
+    }
+    private async Task SampleActivityAsync()
+    {
+        try { var snapshot = await Task.Run(captureActivity, lifetime.Token); if (!exiting) ApplyActivity(snapshot); }
+        catch (OperationCanceledException) { }
+        catch (Exception) { if (!exiting) { log.Write("activity.unavailable"); ApplyActivity(ActivitySnapshot.Empty); } }
+    }
+    internal void ApplyActivity(ActivitySnapshot snapshot)
+    {
+        activity = snapshot;
+        var names = snapshot.Providers;
+        if (!preferences.CompactMonitor || names.Length == 0)
+        { if (monitor.Visible) { SavePosition(); monitor.HideMonitor(preferences.CompactMonitor); } return; }
+        monitor.SetProviders(names); monitor.Render(coordinator.States);
+        if (!monitor.Visible || !monitor.DesiredVisible) OpenMonitor();
+    }
+
+    internal void OpenMonitor()
+    {
+        if (exiting || (monitor.Visible && monitor.DesiredVisible) || !preferences.CompactMonitor || activity.Providers.Length == 0) return;
+        try
+        {
+            if (monitor.Visible) { monitor.ShowMonitor(monitor.Location); return; }
+            var saved = positions.Load();
+            var screen = Screen.AllScreens.FirstOrDefault(s => string.Equals(s.DeviceName, saved?.Display, StringComparison.OrdinalIgnoreCase))
+                ?? Screen.FromPoint(Cursor.Position);
+            // Moving the existing hidden HWND first lets Windows apply the destination DPI.
+            monitor.Location = screen.WorkingArea.Location;
+            monitor.Render(coordinator.States);
+            var location = MonitorPosition.Restore(saved, screen.DeviceName, screen.WorkingArea, monitor.Size, monitor.DeviceDpi);
+            monitor.ShowMonitor(location);
+            log.Write("panel.pinned");
+        }
+        catch (Win32Exception) { MonitorFailed(); }
+    }
+
+    internal void UnpinMonitor() => ChangePreferences(preferences with { CompactMonitor = false });
+
+    private void UpdateStartupState()
+    {
+        var available = startup.TryRead(out var enabled);
+        startupMenu.Checked = enabled;
+        startupMenu.Enabled = available;
+        startupMenu.Text = available ? "Start with Windows" : "Start with Windows (unavailable)";
+        popup.SetStartupState(enabled, available);
+    }
+
+    private void ToggleStartup()
+    {
+        if (startup.TryRead(out var enabled)) startup.TrySet(!enabled);
+        UpdateStartupState();
+    }
+
+    private void ShowPopup()
+    {
+        if (exiting) return;
+        popup.Render(coordinator.States, coordinator.IsRefreshing, log.WriteFailed);
+        popup.ShowPanel(Cursor.Position);
+    }
+
+    private void SavePosition()
+    {
+        if (!monitor.Visible || monitor.IsDisposed) return;
+        var screen = Screen.FromControl(monitor);
+        positions.Save(MonitorPosition.Capture(monitor.RestingLocation, screen.DeviceName, screen.WorkingArea, monitor.DeviceDpi));
+    }
+
+    private void OnDisplaySettingsChanged(object? sender, EventArgs e) => OnUi(() =>
+    {
+        var replacement = AppIcon.Load(SystemInformation.SmallIconSize.Width);
+        tray.Icon = replacement;
+        trayIcon.Dispose(); trayIcon = replacement;
+        if (monitor.Visible) { monitor.KeepOnScreen(); SavePosition(); }
+        if (popup.Visible)
+        {
+            popup.Render(coordinator.States, coordinator.IsRefreshing, log.WriteFailed);
+            popup.KeepOnScreen();
+        }
+    });
+
+    private void OnPowerModeChanged(object sender, PowerModeChangedEventArgs e) => OnUi(() =>
+    {
+        if (e.Mode == PowerModes.Suspend)
+        {
+            suspended = true;
+            poll.Stop(); recovery.Stop(); display.Stop(); activityTimer.Stop(); monitor.HideMonitor();
+        }
+        else if (e.Mode == PowerModes.Resume)
+        {
+            suspended = false;
+            activityTimer.Start(); SampleActivity();
+            ScheduleRecovery();
+            UpdateDisplayTimer();
+            log.Write("system.resumed");
+        }
+    });
+
+    private void OnTimeChanged(object? sender, EventArgs e) => OnUi(ScheduleRecovery);
+    private void OnNetworkAvailabilityChanged(object? sender, NetworkAvailabilityEventArgs e)
+    { if (e.IsAvailable) OnUi(ScheduleRecovery); }
+    private void OnNetworkAddressChanged(object? sender, EventArgs e) => OnUi(ScheduleRecovery);
+
+    internal void ScheduleRecovery()
+    {
+        if (exiting || suspended) return;
+        Render(); // Re-evaluate age/reset immediately after a clock or environment change.
+        recovery.Stop(); recovery.Start(); // One trailing-edge refresh after the environment settles.
+        if (!poll.Enabled) poll.Start(); // Periodic retry survives a continually changing network.
+    }
+
+    private void UpdateDisplayTimer()
+    {
+        if (!exiting && !suspended && (popup.Visible || monitor.Visible)) display.Start(); else display.Stop();
+    }
+
+    private void OnChanged() => OnUi(Render);
+    private void OnUi(Action action)
+    {
+        if (exiting || popup.IsDisposed) return;
+        try { popup.BeginInvoke(action); }
+        catch (InvalidOperationException) { log.Write("ui.dispatch-after-close"); }
+    }
+
+    private void Render()
+    {
+        if (exiting) return;
+        var states = coordinator.States;
+        if (popup.Visible) popup.Render(states, coordinator.IsRefreshing, log.WriteFailed);
+        if (monitor.Visible)
+        {
+            try { monitor.Render(states); }
+            catch (Win32Exception) { MonitorFailed(); }
+        }
+        tray.Text = UsageText.Tooltip(states, DateTimeOffset.UtcNow);
+    }
+
+    private void MonitorFailed()
+    {
+        log.Write("monitor.presentation-failed");
+        monitor.HideMonitor();
+        popup.Render(coordinator.States, coordinator.IsRefreshing, log.WriteFailed);
+        popup.ShowPanel(Cursor.Position);
+    }
+
+    private void StartRefresh()
+    {
+        if (exiting || suspended) return;
+        refreshes.RemoveAll(task => task.IsCompleted);
+        var refresh = RefreshAsync();
+        if (!refresh.IsCompleted) refreshes.Add(refresh);
+        activeRefresh = Task.WhenAll(refreshes);
+    }
+
+    private async Task RefreshAsync()
+    {
+        try { await coordinator.RefreshAsync(lifetime.Token); }
+        catch (OperationCanceledException) when (lifetime.IsCancellationRequested) { }
+        catch (Exception) { log.Write("refresh.unexpected-error"); }
+    }
+
+    internal async Task ExitAsync()
+    {
+        if (exiting) return;
+        SavePosition();
+        exiting = true;
+        poll.Stop();
+        display.Stop();
+        recovery.Stop();
+        activityTimer.Stop();
+        await lifetime.CancelAsync();
+        await activeRefresh;
+        try { await activityTask.WaitAsync(TimeSpan.FromSeconds(2)); } catch (Exception) { }
+        await coordinator.DrainAsync();
+        tray.Visible = false;
+        popup.AllowExit = true;
+        monitor.AllowExit = true;
+        monitor.Close();
+        popup.Close();
+        ExitThread();
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing && !disposed)
+        {
+            disposed = true;
+            SavePosition();
+            exiting = true;
+            lifetime.Cancel();
+            coordinator.Changed -= OnChanged;
+            SystemEvents.DisplaySettingsChanged -= OnDisplaySettingsChanged;
+            SystemEvents.PowerModeChanged -= OnPowerModeChanged;
+            SystemEvents.TimeChanged -= OnTimeChanged;
+            SystemEvents.UserPreferenceChanged -= OnUserPreferenceChanged;
+            NetworkChange.NetworkAvailabilityChanged -= OnNetworkAvailabilityChanged;
+            NetworkChange.NetworkAddressChanged -= OnNetworkAddressChanged;
+            showWait.Unregister(null);
+            quitWait?.Unregister(null);
+            poll.Dispose(); display.Dispose(); recovery.Dispose(); activityTimer.Dispose(); tray.Visible = false; tray.Dispose(); menu.Dispose();
+            popup.AllowExit = true; popup.Dispose();
+            monitor.AllowExit = true; monitor.Dispose();
+            icon.Dispose(); trayIcon.Dispose(); lifetime.Dispose();
+        }
+        base.Dispose(disposing);
+    }
+}

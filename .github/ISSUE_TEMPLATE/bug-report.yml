@@ -1,62 +1,40 @@
 name: Bug report
-description: Report an AgentMeter problem with Codex or Claude Code monitoring.
+description: Report an AgentMeter problem on macOS or Windows.
 labels: [bug]
 body:
   - type: markdown
     attributes:
-      value: "Do not upload credentials, auth files, API keys, tokens, cookies, private prompts/responses, source code, or full terminal history. No serial numbers. Review screenshots and logs before attaching them."
-  - type: input
-    id: app-version
+      value: "Do not upload credentials, auth files, tokens, cookies, private prompts, source code, full terminal history or serial numbers. Review screenshots and diagnostics before attaching them."
+  - type: dropdown
+    id: platform
     attributes:
-      label: AgentMeter version
-    validations:
-      required: true
-  - type: input
-    id: macos-version
-    attributes:
-      label: macOS version
+      label: Platform
+      options: [macOS, Windows]
     validations:
       required: true
   - type: input
-    id: model
+    id: version
     attributes:
-      label: Mac model
-      description: "For example, MacBook Air M2. Do not include a serial number."
+      label: AgentMeter version and installation source
+      description: "For example, macOS beta 3 from GitHub, or a Windows source build."
     validations:
       required: true
-  - type: dropdown
-    id: architecture
+  - type: input
+    id: os
     attributes:
-      label: Architecture
-      options: [Apple Silicon, Intel, Unknown]
+      label: Operating system version and architecture
+      description: "Include Apple Silicon / Intel or Windows x64."
     validations:
       required: true
-  - type: dropdown
-    id: notch
+  - type: input
+    id: displays
     attributes:
-      label: Built-in display has a notch
-      options: ['Yes', 'No', Unknown]
-    validations:
-      required: true
-  - type: dropdown
-    id: external-display
-    attributes:
-      label: External display connected
-      options: ['Yes', 'No']
-    validations:
-      required: true
+      label: Display setup
+      description: "If relevant: notch, external displays, resolution and scaling. No serial numbers."
   - type: input
     id: provider
     attributes:
-      label: Codex or Claude Code version
-      description: "Include versions for each affected CLI or desktop app."
-    validations:
-      required: true
-  - type: dropdown
-    id: surface
-    attributes:
-      label: Affected surface
-      options: [CLI, Desktop, Both, Neither]
+      label: Affected provider and CLI / desktop version
     validations:
       required: true
   - type: textarea
@@ -75,4 +53,3 @@ body:
     id: evidence
     attributes:
       label: Optional sanitized screenshot or diagnostics
-      description: "No private content, authentication material, or full terminal history."

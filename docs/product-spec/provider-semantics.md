@@ -1,0 +1,8 @@
+# Provider semantics
+A normalized reading carries provider, window identity, duration where known, remaining percentage, reset instant, observed instant, freshness and provider status. Identity continuity is verified in memory; account or plan changes invalidate incompatible observations. No account identifiers belong in presentation or logs.
+
+Codex allowance comes from structured provider-owned rate-limit retrieval. Main/core and additional buckets remain separate. A missing main window cannot be synthesized or replaced by Spark. Never assume a five-hour window exists.
+
+Claude Code is the allowance source. The user installs and signs in through it. Validate first-party subscription authentication before and after each read and match the initialized usage session to that identity. Usage checks send no inference prompt. Nonzero model usage/cost/API duration or an incompatible account invalidates the reading. Claude Desktop can contribute activity, but its caches and conversations are never allowance sources.
+
+Unknown fields remain unknown. Malformed envelopes, duplicate identity fields and ambiguous account scopes fail closed. Retaining stale usage requires reverified compatible identity. No automatic provider installation, API-key field, credential extraction or provider authentication inside AgentMeter.

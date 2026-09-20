@@ -1,0 +1,7 @@
+<Project>
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <!-- Release metadata must not reveal the build machine's user or checkout path. -->
+    <Deterministic>true</Deterministic>
+    <PathMap>$(MSBuildThisFileDirectory)=/_/AgentMeter/</PathMap>
+  </PropertyGroup>
+</Project>

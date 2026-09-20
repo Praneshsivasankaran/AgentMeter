@@ -14,6 +14,8 @@ The Microsoft Store package runs as an ordinary-user desktop application. Its ru
 
 Windows Store package preferences, monitor placement and sanitized rotating logs stay in the package's per-user LocalState folder. Usage snapshots remain in memory; provider credentials remain with the providers. Windows manages package data during updates and uninstall. Existing portable AgentMeter data and provider files are not imported or deleted. Inspect and sanitize diagnostics before sharing.
 
+Unpackaged Windows source builds keep preferences, monitor placement and sanitized rotating logs under `%LOCALAPPDATA%\AgentMeter`. Removing an unpackaged build does not automatically remove those settings or provider files.
+
 Normal Mac operation should not request Documents, Desktop, Downloads, Music/Media Library, Accessibility, Screen Recording, Automation, or Full Disk Access. An unexpected request is a bug: do not grant it just to make AgentMeter work; report the version and action that triggered it.
 
 

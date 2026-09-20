@@ -22,3 +22,25 @@ auth.json
 *.p12
 *.mobileprovision
 *.provisionprofile
+
+# Windows development output, packages and private release preparation
+**/bin/
+**/obj/
+**/artifacts/
+**/TestResults/
+**/node_modules/
+.vs/
+*.user
+*.suo
+*.pdb
+*.exe
+*.dll
+*.msix
+*.msixbundle
+*.appx
+*.appxbundle
+*.cer
+*.snk
+**/__pycache__/
+/internal/
+/evidence/
