@@ -1,6 +1,100 @@
 import AppKit
 import Foundation
 import XCTest
+import Darwin
+
+@MainActor final class MigrationTests: XCTestCase {
+  private func suite(_ body: (UserDefaults) throws -> Void) rethrows {
+    let name = "AgentMeter-migration-" + UUID().uuidString
+    let defaults = UserDefaults(suiteName: name)!
+    defer { defaults.removePersistentDomain(forName: name) }
+    try body(defaults)
+  }
+  func testAllowlistOnlyAndNoLoginRegistrationCopy() {
+    suite { d in
+      BetaPreferences.migrate(from: ["notchEnabled": false, "menuEnabled": true,
+        "appearance": "dark", "loginEnabled": true, "token": "synthetic", "usage": 9], to: d)
+      XCTAssertEqual(d.object(forKey: "notchEnabled") as? Bool, false)
+      XCTAssertEqual(d.object(forKey: "menuEnabled") as? Bool, true)
+      XCTAssertEqual(d.string(forKey: "appearance"), "dark")
+      for key in ["loginEnabled", "token", "usage"] { XCTAssertNil(d.object(forKey: key)) }
+      XCTAssertTrue(d.bool(forKey: BetaPreferences.completion))
+    }
+  }
+  func testMalformedValuesUseDefaults() {
+    suite { d in
+      BetaPreferences.migrate(from: ["notchEnabled": 1, "menuEnabled": "false",
+        "appearance": "unknown"], to: d)
+      let p = Preferences(defaults: d)
+      XCTAssertTrue(p.notchEnabled); XCTAssertTrue(p.menuEnabled)
+      XCTAssertEqual(p.appearance, .system)
+    }
+  }
+  func testProductionValuesWinAndMigrationRunsOnce() {
+    suite { d in
+      d.set("light", forKey: "appearance")
+      BetaPreferences.migrate(from: ["appearance": "dark", "menuEnabled": false], to: d)
+      XCTAssertEqual(d.string(forKey: "appearance"), "light")
+      d.set(true, forKey: "menuEnabled")
+      BetaPreferences.migrate(from: ["menuEnabled": false, "notchEnabled": false], to: d)
+      XCTAssertTrue(d.bool(forKey: "menuEnabled"))
+      XCTAssertNil(d.object(forKey: "notchEnabled"))
+    }
+  }
+  func testAllAppearancesAndMissingBeta() {
+    for value in ["system", "light", "dark"] {
+      suite { d in
+        BetaPreferences.migrate(from: ["appearance": value], to: d)
+        XCTAssertEqual(Preferences(defaults: d).appearance.rawValue, value)
+      }
+    }
+    suite { d in
+      BetaPreferences.migrate(from: [:], to: d)
+      XCTAssertTrue(d.bool(forKey: BetaPreferences.completion))
+    }
+  }
+}
+
+@MainActor final class SingleInstanceTests: XCTestCase {
+  private func directory() throws -> URL {
+    let d = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+    try FileManager.default.createDirectory(at: d, withIntermediateDirectories: true,
+      attributes: [.posixPermissions: 0o700])
+    return d
+  }
+  func testExclusiveUntilReleaseAndPersistentInodeReacquired() throws {
+    let d = try directory(); defer { try? FileManager.default.removeItem(at: d) }
+    var first = try InstanceLease.acquire(directory: d)
+    XCTAssertNotNil(first)
+    for _ in 0..<20 { XCTAssertNil(try InstanceLease.acquire(directory: d)) }
+    first = nil
+    XCTAssertNotNil(try InstanceLease.acquire(directory: d))
+    XCTAssertTrue(FileManager.default.fileExists(atPath: d.appendingPathComponent("instance.lock").path))
+  }
+  func testSymlinkAndHardLinkRejectedWithoutModifyingTarget() throws {
+    let d = try directory(); defer { try? FileManager.default.removeItem(at: d) }
+    let target = d.appendingPathComponent("target")
+    try Data("unchanged".utf8).write(to: target)
+    let lock = d.appendingPathComponent("instance.lock")
+    try FileManager.default.createSymbolicLink(at: lock, withDestinationURL: target)
+    XCTAssertThrowsError(try InstanceLease.acquire(directory: d))
+    try FileManager.default.removeItem(at: lock)
+    XCTAssertEqual(link(target.path, lock.path), 0)
+    XCTAssertThrowsError(try InstanceLease.acquire(directory: d))
+    XCTAssertEqual(try String(contentsOf: target, encoding: .utf8), "unchanged")
+  }
+  func testUnsafeDirectoryAndFilePermissionsFailClosed() throws {
+    let d = try directory(); defer { try? FileManager.default.removeItem(at: d) }
+    XCTAssertEqual(chmod(d.path, 0o777), 0)
+    XCTAssertThrowsError(try InstanceLease.acquire(directory: d))
+    XCTAssertEqual(chmod(d.path, 0o700), 0)
+    let lease = try InstanceLease.acquire(directory: d)
+    XCTAssertNotNil(lease)
+    XCTAssertEqual(chmod(d.appendingPathComponent("instance.lock").path, 0o666), 0)
+    XCTAssertThrowsError(try InstanceLease.acquire(directory: d))
+    withExtendedLifetime(lease) {}
+  }
+}
 
 @MainActor final class Phase2Tests: XCTestCase {
   func testNotchAcceptsFirstClickWhileAppIsInBackground() {

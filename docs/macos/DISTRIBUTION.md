@@ -1,6 +1,8 @@
 # macOS distribution
 
-The current beta is unsigned and unnotarized. Apple Developer enrollment is pending. These scripts prepare a future Developer ID release; they do not configure an Apple account or credentials. Existing beta assets must never be silently replaced.
+The published beta remains unsigned and unnotarized. Current source prepares 1.0.0, build 1, bundle ID `io.github.praneshsivasankaran.agentmeter`. These scripts prepare a future Developer ID release; they do not configure an Apple account or credentials. Existing beta assets must never be silently replaced. Signing requires independent re-audit and explicit authorization; source version 1.0.0 is not a release-availability claim.
+
+Inspect the intended production filename without packaging: `scripts/macos/create-dmg.sh <app> --print-production-name` resolves to `AgentMeter-1.0.0-macos.dmg`. The future tag is `macos-v1.0.0`; do not create it during remediation.
 
 ## Local unsigned rehearsal
 
@@ -34,9 +36,9 @@ The future signing command enables Hardened Runtime with `--options runtime` and
 
 See Apple's [notarization overview](https://developer.apple.com/documentation/security/notarizing-macos-software-before-distribution), [custom workflow](https://developer.apple.com/documentation/security/customizing-the-notarization-workflow), and [Hardened Runtime guidance](https://help.apple.com/xcode/mac/current/en.lproj/devf87a2ac8f.html).
 
-## Future signed release — after enrollment activates
+## Future signed release — after independent re-audit and authorization
 
-Choose a **new** release version/build first, run the complete tests and privacy/secret/artifact audits, then build a fresh app. Do not reuse the published beta tag for changed bytes.
+The reserved version is **1.0.0 (build 1)**, with matching `AgentMeterReleaseVersion`. Run the complete tests and privacy/secret/artifact audits, then build a fresh app. Do not reuse the published beta tag for changed bytes. Intended future identity: `Developer ID Application: Pranesh S (K38622WCYD)`; never use it in unsigned validation.
 
 Set `DEVELOPER_ID_APPLICATION` to the exact real **Developer ID Application** identity installed in your Keychain. No certificate hash, private key, password, or identity is stored in these scripts. Do not use Apple Development, ad-hoc, or self-signed identities as substitutes.
 

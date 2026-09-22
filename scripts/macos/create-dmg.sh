@@ -1,11 +1,16 @@
 #!/bin/bash
 set -euo pipefail
 source "$(dirname "$0")/common.sh"
-[[ $# == 2 ]] || fail 'Usage: create-dmg.sh APP --unsigned|--signed'
+[[ $# == 2 ]] || fail 'Usage: create-dmg.sh APP --unsigned|--signed|--print-production-name'
 APP="$(cd "$1" && pwd)"
 MODE="$2"
-[[ "$MODE" == --unsigned || "$MODE" == --signed ]] || fail 'Choose --unsigned or --signed explicitly'
+[[ "$MODE" == --unsigned || "$MODE" == --signed || "$MODE" == --print-production-name ]] || fail 'Choose --unsigned or --signed explicitly'
 app_check "$APP"
+VERSION=$(/usr/libexec/PlistBuddy -c 'Print :AgentMeterReleaseVersion' "$APP/Contents/Info.plist")
+if [[ "$MODE" == --print-production-name ]]; then
+  printf 'AgentMeter-%s-macos.dmg\n' "$VERSION"
+  exit 0
+fi
 if [[ "$MODE" == --signed ]]; then
   identity_check
   "$ROOT/scripts/macos/verify-release.sh" "$APP" --notarized

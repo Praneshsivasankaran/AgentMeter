@@ -13,6 +13,8 @@ import SwiftUI
   private var observers: [NSObjectProtocol] = []
   private var quitting = false
   func applicationDidFinishLaunching(_ notification: Notification) {
+    DistributedNotificationCenter.default().addObserver(
+      self, selector: #selector(openMain), name: InstanceLease.reopen, object: nil)
     Diagnostics.shared.record("launch")
     createApplicationMenu()
     let discovery = ProviderDiscovery()

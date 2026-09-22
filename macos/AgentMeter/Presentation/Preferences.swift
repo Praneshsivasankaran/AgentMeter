@@ -1,6 +1,31 @@
 import AppKit
 import Observation
 import ServiceManagement
+import CoreFoundation
+
+enum BetaPreferences {
+  static let oldDomain = "local.agentmeter.mac"
+  static let completion = "betaPreferencesMigrated"
+  static func migrateIfNeeded() {
+    guard UserDefaults.standard.object(forKey: completion) == nil else { return }
+    migrate(from: UserDefaults.standard.persistentDomain(forName: oldDomain) ?? [:],
+      to: .standard)
+  }
+  static func migrate(from old: [String: Any], to defaults: UserDefaults) {
+    guard defaults.object(forKey: completion) == nil else { return }
+    for key in ["notchEnabled", "menuEnabled"] where defaults.object(forKey: key) == nil {
+      if let value = old[key] as? NSNumber, CFGetTypeID(value) == CFBooleanGetTypeID() {
+        defaults.set(value.boolValue, forKey: key)
+      }
+    }
+    if defaults.object(forKey: "appearance") == nil, let value = old["appearance"] as? String,
+      ["system", "light", "dark"].contains(value) {
+      defaults.set(value, forKey: "appearance")
+    }
+    // Login registration is deliberately NOT a preference. The old domain is retained.
+    defaults.set(true, forKey: completion)
+  }
+}
 
 enum AppAppearance: String, CaseIterable, Identifiable {
   case system, light, dark

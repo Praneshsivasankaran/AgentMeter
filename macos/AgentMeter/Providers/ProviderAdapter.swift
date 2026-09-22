@@ -2,6 +2,9 @@ import Foundation
 
 protocol UsageSource: Sendable { func query() async -> QueryResult }
 struct ProviderAdapter: UsageSource {
+  private var claudeEnvironment: [String] {
+    discovery.childEnvironment + ["DISABLE_TELEMETRY=1"]
+  }
   let provider: ProviderID
   let discovery: ProviderDiscovery
   var discovered: @Sendable (ProviderID, Installation) -> Void = { _, _ in }
@@ -52,7 +55,7 @@ struct ProviderAdapter: UsageSource {
       _ = try await rpc(
         p, id: 1, method: "initialize",
         params: .object([
-          "clientInfo": .object(["name": .string("agentmeter"), "version": .string("0.1.0")])
+          "clientInfo": .object(["name": .string("agentmeter"), "version": .string("1.0.0")])
         ]))
       try await p.send(.object(["method": .string("initialized")]))
       let before = try Parsers.codexAccount(
@@ -89,7 +92,7 @@ struct ProviderAdapter: UsageSource {
     limits.line = 131072
     let (data, status) = try await Subprocess.run(
       executable: install.executable, arguments: ["auth", "status"],
-      environment: discovery.childEnvironment, directory: discovery.directory, limits: limits)
+      environment: claudeEnvironment, directory: discovery.directory, limits: limits)
     return try Parsers.claudeAccount(J.parse(data), status: status)
   }
   private func control(_ p: Subprocess, id: String, request: [String: J]) async throws -> J {
@@ -118,7 +121,7 @@ struct ProviderAdapter: UsageSource {
           "--print", "--input-format", "stream-json", "--output-format", "stream-json", "--verbose",
           "--no-session-persistence", "--safe-mode", "--setting-sources=", "--strict-mcp-config",
           "--mcp-config", "{\"mcpServers\":{}}",
-        ], environment: discovery.childEnvironment, directory: discovery.directory)
+        ], environment: claudeEnvironment, directory: discovery.directory)
       process = p
       let initialized = try await control(
         p, id: "init", request: ["subtype": .string("initialize"), "hooks": .object([:])])

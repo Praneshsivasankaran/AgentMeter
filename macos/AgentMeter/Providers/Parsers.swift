@@ -46,7 +46,9 @@ enum Parsers {
     guard j["authMethod"].string == "claude.ai", j["apiProvider"].string == "firstParty",
       let plan = j["subscriptionType"].string, ["pro", "max", "team", "enterprise"].contains(plan)
     else { throw Failure.incompatible }
-    guard j["analyticsDisabled"].bool == false else { throw Failure.incompatible }
+    // Helpers explicitly opt out. Missing/changed confirmation fails closed;
+    // telemetry policy is separate from the no-inference checks in claude().
+    guard j["analyticsDisabled"].bool == true else { throw Failure.incompatible }
     let org = try text(j["orgId"], max: 160)
     guard UUID(uuidString: org) != nil else { throw Failure.incompatible }
     return try .init(

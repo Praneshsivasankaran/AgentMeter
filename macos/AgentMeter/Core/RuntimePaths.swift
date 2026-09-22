@@ -1,6 +1,44 @@
 import Darwin
 import Foundation
 
+// Persistent empty inode, not a PID file. Never unlink: that would split the lock
+// across inodes. O_CLOEXEC prevents provider children from retaining ownership.
+final class InstanceLease {
+  static let identifier = "io.github.praneshsivasankaran.agentmeter"
+  static let reopen = Notification.Name(identifier + ".reopen")
+  private let descriptor: Int32
+  private init(_ descriptor: Int32) { self.descriptor = descriptor }
+  deinit { close(descriptor) }
+  enum LeaseError: Error { case unsafeLocation, unavailable }
+  static func acquire(directory: URL? = nil) throws -> InstanceLease? {
+    let directory = directory ?? FileManager.default.homeDirectoryForCurrentUser
+      .appendingPathComponent("Library/Application Support/" + identifier, isDirectory: true)
+    try FileManager.default.createDirectory(
+      at: directory, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
+    let dir = open(directory.path, O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC)
+    guard dir >= 0 else { throw LeaseError.unsafeLocation }
+    defer { close(dir) }
+    var info = stat()
+    guard fstat(dir, &info) == 0, info.st_uid == getuid(), info.st_mode & 0o077 == 0 else {
+      throw LeaseError.unsafeLocation
+    }
+    let fd = openat(dir, "instance.lock", O_RDWR | O_CREAT | O_NOFOLLOW | O_CLOEXEC, 0o600)
+    guard fd >= 0 else { throw LeaseError.unavailable }
+    guard fstat(fd, &info) == 0, info.st_uid == getuid(), info.st_mode & S_IFMT == S_IFREG,
+      info.st_mode & 0o077 == 0, info.st_nlink == 1 else {
+      close(fd)
+      throw LeaseError.unsafeLocation
+    }
+    guard flock(fd, LOCK_EX | LOCK_NB) == 0 else {
+      let code = errno
+      close(fd)
+      if code == EWOULDBLOCK { return nil }
+      throw LeaseError.unavailable
+    }
+    return InstanceLease(fd)
+  }
+}
+
 enum RuntimePaths {
   // The user home itself may be a Git worktree. An isolated OS temporary
   // directory plus a Git ceiling prevents provider startup traversing it.

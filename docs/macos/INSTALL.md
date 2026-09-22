@@ -1,6 +1,6 @@
 # AgentMeter for macOS beta
 
-[Download macOS beta 3](https://github.com/Praneshsivasankaran/AgentMeter/releases/tag/macos-0.1.0-beta.3). It is unsigned and unnotarized while Apple Developer enrollment is being processed. A signed and notarized build is planned next. There is no Mac App Store or DMG release yet.
+[Download macOS beta 3](https://github.com/Praneshsivasankaran/AgentMeter/releases/tag/macos-0.1.0-beta.3). It remains unsigned and unnotarized. A signed and notarized 1.0.0 build is planned after independent validation; it is not available yet. There is no Mac App Store or production DMG release yet.
 
 Download the ZIP from the release page, check it against the accompanying SHA-256 file, expand it, move `AgentMeter.app` to Applications, and open it. The current ad-hoc build may be rejected by Gatekeeper. Do not disable Gatekeeper or change global security settings. Only proceed with a build you trust; use Apple's per-app **Open Anyway** option in System Settings → Privacy & Security if macOS offers it. If it does not, wait for the signed build or choose the [source-build route](BUILD.md).
 

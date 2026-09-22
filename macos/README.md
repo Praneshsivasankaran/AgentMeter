@@ -8,4 +8,4 @@ Usage refresh is coalesced per provider every 30 seconds. Activity uses 500 ms n
 
 Provider helpers use an explicit isolated temporary directory and Git-discovery ceiling. Do not replace this with the app's inherited working directory: it can expose user worktrees and trigger unrelated macOS privacy requests.
 
-The development bundle identifier remains `local.agentmeter.mac` for this beta to preserve preferences. App Sandbox is intentionally disabled. Distribution identity will be reviewed before Developer ID signing. The Release target contains no development command channel; Debug-only acceptance hooks are excluded at compilation.
+The 1.0.0 source candidate uses permanent bundle identifier `io.github.praneshsivasankaran.agentmeter`. It is not yet a signed/notarized production release. App Sandbox is intentionally disabled. The Release target contains no development command channel; Debug-only acceptance hooks are excluded at compilation. Beta preference migration is allowlisted and runs once; Launch at Login must be disabled in the old beta before replacing it and re-enabled in the installed production app after its release.

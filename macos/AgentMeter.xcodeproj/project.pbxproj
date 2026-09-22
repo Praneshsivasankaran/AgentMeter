@@ -846,11 +846,11 @@
 					<string>@loader_path/../Frameworks</string>
 				</array>
 				<key>MARKETING_VERSION</key>
-				<string>0.1.0</string>
+				<string>1.0.0</string>
 				<key>CURRENT_PROJECT_VERSION</key>
-				<string>2</string>
+				<string>1</string>
 				<key>PRODUCT_BUNDLE_IDENTIFIER</key>
-				<string>local.agentmeter.mac</string>
+				<string>io.github.praneshsivasankaran.agentmeter</string>
 				<key>INFOPLIST_FILE</key>
 				<string>AgentMeter/Info.plist</string>
 				<key>SWIFT_OPTIMIZATION_LEVEL</key>
@@ -882,11 +882,11 @@
 					<string>@loader_path/../Frameworks</string>
 				</array>
 				<key>MARKETING_VERSION</key>
-				<string>0.1.0</string>
+				<string>1.0.0</string>
 				<key>CURRENT_PROJECT_VERSION</key>
-				<string>2</string>
+				<string>1</string>
 				<key>PRODUCT_BUNDLE_IDENTIFIER</key>
-				<string>local.agentmeter.mac</string>
+				<string>io.github.praneshsivasankaran.agentmeter</string>
 				<key>INFOPLIST_FILE</key>
 				<string>AgentMeter/Info.plist</string>
 				<key>SWIFT_OPTIMIZATION_LEVEL</key>
@@ -938,11 +938,11 @@
 					<string>@loader_path/../Frameworks</string>
 				</array>
 				<key>MARKETING_VERSION</key>
-				<string>0.1.0</string>
+				<string>1.0.0</string>
 				<key>CURRENT_PROJECT_VERSION</key>
 				<string>1</string>
 				<key>PRODUCT_BUNDLE_IDENTIFIER</key>
-				<string>local.agentmeter.mac.tests</string>
+				<string>io.github.praneshsivasankaran.agentmeter.tests</string>
 				<key>GENERATE_INFOPLIST_FILE</key>
 				<string>YES</string>
 				<key>SWIFT_OPTIMIZATION_LEVEL</key>
@@ -974,11 +974,11 @@
 					<string>@loader_path/../Frameworks</string>
 				</array>
 				<key>MARKETING_VERSION</key>
-				<string>0.1.0</string>
+				<string>1.0.0</string>
 				<key>CURRENT_PROJECT_VERSION</key>
 				<string>1</string>
 				<key>PRODUCT_BUNDLE_IDENTIFIER</key>
-				<string>local.agentmeter.mac.tests</string>
+				<string>io.github.praneshsivasankaran.agentmeter.tests</string>
 				<key>GENERATE_INFOPLIST_FILE</key>
 				<string>YES</string>
 				<key>SWIFT_OPTIMIZATION_LEVEL</key>

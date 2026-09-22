@@ -64,7 +64,7 @@ private struct AboutView: View {
       MeterMark().scaleEffect(2).frame(height: 50)
       Text("AgentMeter").font(.title.bold())
       Text(
-        "Version \(Bundle.main.object(forInfoDictionaryKey:"AgentMeterReleaseVersion") as? String ?? "0.1.0")"
+        "Version \(Bundle.main.object(forInfoDictionaryKey:"AgentMeterReleaseVersion") as? String ?? "1.0.0")"
       ).font(.callout).foregroundStyle(.secondary)
       Text("AI coding allowance, quietly at a glance.").font(.callout).foregroundStyle(.secondary)
       Text("Native. Local. No AgentMeter account.").font(.caption).foregroundStyle(.tertiary)

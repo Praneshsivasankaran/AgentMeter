@@ -9,6 +9,6 @@ app_check() {
   python3 "$ROOT/macos/Scripts/privacy-check.py" "$1"
 }
 identity_check() {
-  [[ "${DEVELOPER_ID_APPLICATION:-}" == 'Developer ID Application: '* ]] || fail 'Set DEVELOPER_ID_APPLICATION to a real Developer ID Application identity after enrollment activates.'
+  [[ "${DEVELOPER_ID_APPLICATION:-}" == 'Developer ID Application: Pranesh S (K38622WCYD)' ]] || fail 'Set DEVELOPER_ID_APPLICATION to the approved Pranesh S Developer ID Application identity only after signing authorization.'
 }
 plan() { printf 'PLAN:'; printf ' %q' "$@"; printf '\n'; }

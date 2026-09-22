@@ -14,6 +14,29 @@ private func reading(_ binding: String = "A") throws -> Reading {
   try .init(binding: binding, windows: [window()], date: Date())
 }
 @MainActor final class ParserTests: XCTestCase {
+  func testClaudeAnalyticsDisabledTrueAccepted() throws {
+    XCTAssertNoThrow(try Parsers.claudeAccount(json(Self.auth), status: 0))
+  }
+  func testClaudeAnalyticsEnabledRejected() throws {
+    XCTAssertThrowsError(try Parsers.claudeAccount(
+      json(Self.auth.replacingOccurrences(of: "\"analyticsDisabled\":true", with: "\"analyticsDisabled\":false")), status: 0))
+  }
+  func testClaudeAnalyticsAbsentOrRenamedRejected() throws {
+    for value in [Self.auth.replacingOccurrences(of: "\"analyticsDisabled\":true,", with: ""),
+      Self.auth.replacingOccurrences(of: "analyticsDisabled", with: "renamedField")] {
+      XCTAssertThrowsError(try Parsers.claudeAccount(json(value), status: 0))
+    }
+  }
+  func testClaudeAnalyticsWrongTypeRejected() throws {
+    for value in ["null", "1", "\"true\"", "{}", "[]"] {
+      XCTAssertThrowsError(try Parsers.claudeAccount(json(Self.auth.replacingOccurrences(
+        of: "\"analyticsDisabled\":true", with: "\"analyticsDisabled\":" + value)), status: 0))
+    }
+  }
+  func testClaudeAnalyticsDuplicateRejected() {
+    XCTAssertThrowsError(try json(Self.auth.replacingOccurrences(
+      of: "\"analyticsDisabled\":true", with: "\"analyticsDisabled\":true,\"analyticsDisabled\":false")))
+  }
   func testCodexPreservesWeeklyMainAndSeparateSpark() throws {
     let r = try Parsers.codex(
       json(
@@ -112,7 +135,7 @@ private func reading(_ binding: String = "A") throws -> Reading {
     XCTAssertEqual(w.remaining, 75)
   }
   static let auth =
-    #"{"loggedIn":true,"authMethod":"claude.ai","apiProvider":"firstParty","subscriptionType":"max","analyticsDisabled":false,"email":"synthetic@example.invalid","orgId":"00000000-0000-0000-0000-000000000001","orgName":"Synthetic"}"#
+    #"{"loggedIn":true,"authMethod":"claude.ai","apiProvider":"firstParty","subscriptionType":"max","analyticsDisabled":true,"email":"synthetic@example.invalid","orgId":"00000000-0000-0000-0000-000000000001","orgName":"Synthetic"}"#
   static let usage =
     #"{"rate_limits_available":true,"subscription_type":"max","behaviors":null,"session":{"total_cost_usd":0,"total_api_duration_ms":0,"model_usage":{}},"rate_limits":{"five_hour":{"utilization":20,"resets_at":"2030-01-01T00:00:00Z"},"seven_day":{"utilization":30,"resets_at":"2030-01-07T00:00:00Z"}}}"#
 }
