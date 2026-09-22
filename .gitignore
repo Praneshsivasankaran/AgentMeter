@@ -44,3 +44,6 @@ auth.json
 **/__pycache__/
 /internal/
 /evidence/
+
+# Generated static GitHub Pages output
+/_site/
