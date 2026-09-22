@@ -2,6 +2,8 @@
 
 AgentMeter monitors Codex and Claude Code usage on **macOS and Windows**, with a native usage window and a compact monitor that appears when supported sessions are active.
 
+[Website](https://praneshsivasankaran.github.io/AgentMeter/) · [Privacy](https://praneshsivasankaran.github.io/AgentMeter/privacy/) · [Support](https://praneshsivasankaran.github.io/AgentMeter/support/)
+
 ## Download AgentMeter
 
 | | macOS | Windows |

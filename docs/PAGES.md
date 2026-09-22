@@ -4,6 +4,19 @@ GitHub Pages hosts the personal AgentMeter landing, privacy and support pages.
 The developer/publisher is Pranesh S. The repository remains the source and
 release home; the site does not claim either Store is available.
 
+## Public URLs
+
+Use these exact, case-sensitive URLs for product metadata:
+
+| Field | URL |
+| --- | --- |
+| Website | https://praneshsivasankaran.github.io/AgentMeter/ |
+| Privacy Policy | https://praneshsivasankaran.github.io/AgentMeter/privacy/ |
+| Support | https://praneshsivasankaran.github.io/AgentMeter/support/ |
+
+All three pages are public and require no account. GitHub Issues remains the
+support destination; creating an issue requires a GitHub account.
+
 ## Maintenance
 
 Edit the small templates and stylesheet in `site/`. The three-bar mark follows
