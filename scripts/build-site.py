@@ -102,18 +102,13 @@ def build(output, base_url=""):
             values[key + "_DOWNLOAD"] = values[key + "_CTA"]
             values[key + "_COMPATIBILITY"] = html.escape(item["compatibility"])
             values[key + "_VERSION"] = html.escape(("Version " + item["version"]) if item["version"] else "Release version pending")
-            values[key + "_STATUS"] = "Direct download" if item["download_url"] else "Not yet available · Final package pending"
+            values[key + "_STATUS"] = "Direct download" if item["download_url"] else "Not yet available"
         values["MAC_SIGNING"] = '<p>Signed and notarized by Apple</p>' if config["macos"].get("signed_notarized") else ""
         rendered = layout
         for key, value in values.items():
             rendered = rendered.replace("{{" + key + "}}", value)
         if "{{" in rendered:
             raise ValueError("Unresolved page template token")
-        # Availability copy follows the same config as every CTA.
-        if all(config[p]["download_url"] for p in ("macos", "windows")):
-            rendered = rendered.replace("Downloads coming soon.", "Available for macOS and Windows.")
-        elif any(config[p]["download_url"] for p in ("macos", "windows")):
-            rendered = rendered.replace("Downloads coming soon.", "Some platform downloads are not yet available.")
         target = output / route / "index.html"
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text("\n".join(line.rstrip() for line in rendered.splitlines()) + "\n", encoding="utf-8")

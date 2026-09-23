@@ -2,26 +2,67 @@
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 const systemDark = window.matchMedia("(prefers-color-scheme: dark)");
 
+// Demonstrate expansion once on arrival, then leave control with the visitor.
 for (const notch of document.querySelectorAll(".notch")) {
   const button = notch.querySelector(".notch-toggle");
   const details = notch.querySelector(".notch-details");
   let pinned = false;
+  let interacted = false;
+  let timer;
+  let observer;
   const expand = (open) => {
     button.setAttribute("aria-expanded", String(open));
     details.hidden = !open;
   };
+  const takeControl = () => {
+    interacted = true;
+    clearTimeout(timer);
+    observer?.disconnect();
+  };
+  const demonstrate = () => {
+    if (!interacted) {
+      pinned = true;
+      expand(true);
+    }
+  };
+  if (reducedMotion.matches) {
+    demonstrate();
+  } else if ("IntersectionObserver" in window) {
+    observer = new IntersectionObserver((entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) {
+        observer.disconnect();
+        timer = setTimeout(demonstrate, 750);
+      }
+    }, { threshold: 0.5 });
+    observer.observe(notch);
+  } else {
+    demonstrate();
+  }
+  reducedMotion.addEventListener("change", (event) => {
+    if (event.matches) {
+      clearTimeout(timer);
+      observer?.disconnect();
+      demonstrate();
+    }
+  });
   notch.addEventListener("pointerenter", (event) => {
-    if (event.pointerType === "mouse") expand(true);
+    if (event.pointerType === "mouse") {
+      takeControl();
+      expand(true);
+    }
   });
   notch.addEventListener("pointerleave", () => {
     if (!pinned) expand(false);
   });
+  notch.addEventListener("focusin", takeControl);
   button.addEventListener("click", () => {
+    takeControl();
     pinned = !pinned;
     expand(pinned);
   });
   notch.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
+      takeControl();
       pinned = false;
       expand(false);
       button.focus();

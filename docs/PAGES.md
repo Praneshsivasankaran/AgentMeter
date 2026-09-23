@@ -24,7 +24,7 @@ analytics, cookies, trackers, forms or runtime network requests.
 ## Source and configuration
 
 - `site/index.html`: Navigation → Hero → Features/product showcase → Privacy → Download → Footer, with shared navigation/footer in `site/layout.html`.
-- `site/styles.css` and `site/app.js`: responsive light-first styling, contextual monitor disclosure, activity steps, appearance selection and reduced-motion-aware transitions.
+- `site/styles.css` and `site/app.js`: responsive light-first styling, automatic one-time monitor expansion, manual disclosure, activity steps, appearance selection and reduced-motion-aware transitions. The monitor stays expanded after its demonstration; reduced motion shows the expanded state immediately.
 - `site/config.json`: single source for versions, actual download URLs, GitHub URL, canonical base URL and the macOS signing claim.
 - `site/media/README.md`: exact provenance of real media and illustrations.
 - `PRIVACY.md`: authoritative policy, rendered verbatim with exact visible-text parity tests.

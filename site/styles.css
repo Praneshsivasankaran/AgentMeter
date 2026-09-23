@@ -1359,3 +1359,8 @@ button[hidden],
   filter: brightness(0);
   opacity: 0.72;
 }
+
+/* Headings stand on their own after removing editorial labels and captions. */
+.hero h1, .section-heading h2, .feature h3 { margin-top: 0; }
+.glance-stage { margin-bottom: 24px; flex: 1; min-height: 220px; }
+.hero-visual { padding-top: 0; }

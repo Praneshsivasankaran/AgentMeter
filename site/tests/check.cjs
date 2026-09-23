@@ -83,6 +83,7 @@ const results = [];
     }
     await page.setViewportSize({ width: 1440, height: 1000 });
     await page.goto("http://127.0.0.1:4173/");
+    await page.waitForFunction(() => document.querySelector('.hero .notch-toggle').getAttribute('aria-expanded') === 'true');
     await page.keyboard.press(engine === "webkit" ? "Alt+Tab" : "Tab");
     assert.equal(
       await page
@@ -105,6 +106,7 @@ const results = [];
     );
     const notch = page.locator(".hero .notch-toggle");
     await notch.focus();
+    await page.keyboard.press("Escape");
     await page.keyboard.press("Enter");
     assert.equal(await notch.getAttribute("aria-expanded"), "true");
     await page.keyboard.press("Escape");
@@ -176,6 +178,8 @@ const results = [];
     );
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("http://127.0.0.1:4173/");
+    assert.equal(await page.locator('.hero .notch-toggle').getAttribute('aria-expanded'), 'true');
+    await page.locator('.hero .notch-toggle').press('Escape');
     await page.locator(".hero .notch-toggle").click();
     assert.equal(
       await page.locator(".hero .notch-toggle").getAttribute("aria-expanded"),
