@@ -150,7 +150,10 @@ internal sealed class TrayContext : ApplicationContext
     {
         if (!preferenceStore.Save(value)) { popup.SetPreferences(preferences); popup.PreferenceSaveFailed(); return; }
         preferences = value; tray.Visible = value.TrayIcon;
-        Palette.Apply(value.Appearance); popup.SetPreferences(value); monitor.UpdateSurface(); ApplyActivity(activity);
+        Palette.Apply(value.Appearance); popup.SetPreferences(value);
+        if (setupWindow is { IsDisposed: false }) setupWindow.ApplyTheme();
+        if (checkWindow is { IsDisposed: false }) checkWindow.ApplyTheme();
+        monitor.UpdateSurface(); ApplyActivity(activity);
     }
 
     private void SampleActivity()

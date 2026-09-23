@@ -19,7 +19,7 @@ internal sealed class PreferenceStore(string path)
             if (root.ValueKind != JsonValueKind.Object) return false;
             return root.EnumerateObject().Any(p =>
                 (p.Name is "CompactMonitor" or "TrayIcon" && p.Value.ValueKind is JsonValueKind.True or JsonValueKind.False)
-                || (p.Name == "Appearance" && p.Value.TryGetInt32(out var n) && Enum.IsDefined((Appearance)n)));
+                || (p.Name == "Appearance" && p.Value.ValueKind == JsonValueKind.Number && p.Value.TryGetInt32(out var n) && Enum.IsDefined((Appearance)n)));
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException or JsonException or InvalidOperationException) { return false; }
     }
