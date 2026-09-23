@@ -1607,3 +1607,77 @@ body {
       #ffffff70 58.2% 58.5%, #c895d638 58.7% 67%, transparent 67.2%);
   }
 }
+
+/* White surfaces on a continuous blush canvas, beyond the hero alone. */
+:root { background: #f5e6ee; }
+body {
+  background:
+    radial-gradient(ellipse 100% 900px at 0% 20%, #ffffffb8, transparent 68%),
+    radial-gradient(ellipse 85% 850px at 100% 48%, #edbdd580, transparent 72%),
+    radial-gradient(ellipse 100% 900px at 5% 86%, #edbbd34d, transparent 72%),
+    linear-gradient(150deg, #f9edf3 0%, #f2dfe9 37%, #fbeef4 66%, #f2dce8);
+}
+.header { background: #fffafcde; border-bottom-color: #ffffff94; }
+.header.scrolled { border-bottom-color: #e5cfdc; }
+.hero::before {
+  border-color: #ffffffbd;
+  background:
+    radial-gradient(ellipse at 3% 15%, #ffffffed, #ffffff00 60%),
+    radial-gradient(ellipse at 98% 8%, #eeb4d075, transparent 60%),
+    linear-gradient(120deg, #fff6fa 8%, #f4dfe9 48%, #eac7db 78%, #f6dbe7);
+  box-shadow: inset 0 1px 0 #fff, 0 18px 45px -32px #88476540;
+}
+.hero::after {
+  background: radial-gradient(ellipse 115% 135% at 108% 145%,
+    #fff8fb 0% 49%, #ffffffc7 49.15% 49.4%, #f4dce9b3 49.55% 56%,
+    #ffffffa0 56.15% 56.4%, #d790b938 56.55% 63%,
+    #ffffff80 63.15% 63.4%, transparent 63.55%);
+}
+.feature {
+  background: linear-gradient(145deg, #ffffff, #fffafc);
+  border-color: #ffffffed;
+  box-shadow: 0 2px 5px #73314f06, 0 15px 32px -22px #73314f30,
+    inset 0 0 0 1px #f1e4eb;
+}
+.privacy-section {
+  border-color: #ffffffd9;
+  background:
+    radial-gradient(ellipse at 100% 0%, #f2cde166, transparent 65%),
+    linear-gradient(120deg, #fffafd, #f9eaf2);
+  box-shadow: inset 0 1px 0 #fff, 0 16px 38px -28px #8c48694d;
+}
+.privacy-icon { background: #fff; border-color: #eaddE8; }
+.open-source { border-top-color: #ead7e1; }
+.download-section {
+  background: radial-gradient(ellipse 48% 65% at 50% 50%, #ffffffa1, transparent 100%);
+}
+.download-card {
+  border-color: #fffffff2;
+  background: linear-gradient(145deg, #fff, #fffafd);
+  box-shadow: 0 16px 34px -22px #85456538, inset 0 0 0 1px #f0e0e9;
+}
+.footer {
+  background: #fffafcb8;
+  border: 1px solid #ffffffc2;
+  border-bottom: 0;
+  border-radius: 22px 22px 0 0;
+}
+@media (max-width: 700px) {
+  body {
+    background:
+      radial-gradient(ellipse 120% 1200px at 0% 30%, #ffffff8c, transparent 70%),
+      radial-gradient(ellipse 130% 1600px at 100% 70%, #ecb9d34d, transparent 75%),
+      linear-gradient(160deg, #faedf4, #f1dce8 48%, #faedf3 78%, #f2dce8);
+  }
+  .hero::before {
+    background: radial-gradient(ellipse at 0% 0%, #fffffff2, transparent 65%),
+      linear-gradient(155deg, #fbecf3 12%, #ebc8db 64%, #f5dbe7);
+  }
+  .hero::after {
+    background: radial-gradient(ellipse 190% 105% at 125% 144%,
+      #fff8fb 0% 49%, #ffffffc7 49.2% 49.5%, #f3dce8b3 49.7% 58%,
+      #ffffffa0 58.2% 58.5%, #d790b938 58.7% 67%, transparent 67.2%);
+  }
+  .download-section { background: radial-gradient(ellipse at 50% 50%, #ffffff9c, transparent 75%); }
+  .footer { border-radius: 18px 18px 0 0; }
+}
