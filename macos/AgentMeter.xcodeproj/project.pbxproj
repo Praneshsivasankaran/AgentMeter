@@ -944,7 +944,7 @@
 				<key>CURRENT_PROJECT_VERSION</key>
 				<string>1</string>
 				<key>PRODUCT_BUNDLE_IDENTIFIER</key>
-				<string>io.github.praneshsivasankaran.agentmeter.tests</string>
+				<string>io.github.praneshsivasankaran.llumi.tests</string>
 				<key>GENERATE_INFOPLIST_FILE</key>
 				<string>YES</string>
 				<key>SWIFT_OPTIMIZATION_LEVEL</key>
@@ -980,7 +980,7 @@
 				<key>CURRENT_PROJECT_VERSION</key>
 				<string>1</string>
 				<key>PRODUCT_BUNDLE_IDENTIFIER</key>
-				<string>io.github.praneshsivasankaran.agentmeter.tests</string>
+				<string>io.github.praneshsivasankaran.llumi.tests</string>
 				<key>GENERATE_INFOPLIST_FILE</key>
 				<string>YES</string>
 				<key>SWIFT_OPTIMIZATION_LEVEL</key>

@@ -34,7 +34,7 @@ if (@(Get-ChildItem -LiteralPath $Directory -Filter '*.pdb' -File -Recurse).Coun
 $binaries = @(Get-ChildItem -LiteralPath $Directory -File | Where-Object {
     ($_.Name -like 'Llumi*' -or $_.Name -like 'AgentMeter.Core*') -and $_.Extension -in @('.dll', '.exe')
 })
-if ($binaries.Count -lt 3) { throw 'Expected AgentMeter release binaries were not found.' }
+if ($binaries.Count -lt 3) { throw 'Expected Llumi release binaries were not found.' }
 foreach ($binary in $binaries) {
     $bytes = [IO.File]::ReadAllBytes($binary.FullName)
     foreach ($encoding in @([Text.Encoding]::UTF8, [Text.Encoding]::Unicode, [Text.Encoding]::BigEndianUnicode)) {
@@ -61,4 +61,4 @@ $forbidden = @(Get-ChildItem -LiteralPath $Directory -Recurse -Force | Where-Obj
     $_.Name -match '(?i)^(ClaudeBridge|node\.exe|sdk\.mjs|claude\.exe|codex\.exe|node_modules)$' -or $_.Name -match '(?i)anthropic|claude-agent-sdk'
 })
 if ($forbidden.Count -gt 0) { throw 'V2 must not redistribute provider executables, Node, or the Claude SDK.' }
-Write-Host "Release metadata and V2 dependency guard passed for $($binaries.Count) AgentMeter binaries."
+Write-Host "Release metadata and V2 dependency guard passed for $($binaries.Count) Llumi binaries."

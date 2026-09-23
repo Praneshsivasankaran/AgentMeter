@@ -1,6 +1,6 @@
 # Official distribution
 
-GitHub is the canonical home for AgentMeter's product documentation, issues, source and direct releases.
+GitHub is the canonical home for Llumi's product documentation, issues, source and direct releases.
 
 | Platform | Store channel | GitHub Releases |
 | --- | --- | --- |

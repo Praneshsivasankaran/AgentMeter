@@ -252,7 +252,7 @@ public sealed class PopupTests
             .Where(field => field.FieldType == typeof(ContextMenuStrip))
             .Select(field => (ContextMenuStrip)field.GetValue(form)!);
         return Assert.Single(menus.SelectMany(menu => menu.Items.OfType<ToolStripMenuItem>()),
-            item => item.Text is "Quit" or "Quit AgentMeter" || item.AccessibleName == "Quit AgentMeter");
+            item => item.Text is "Quit" or "Quit Llumi" || item.AccessibleName == "Quit Llumi");
     }
     private static void DispatchHiddenClick(Button button) => typeof(Button)
         .GetMethod("OnClick", BindingFlags.Instance | BindingFlags.NonPublic)!
@@ -265,7 +265,7 @@ public sealed class PopupTests
         form.Render([Live()], false, false);
         form.ShowPanel(Screen.PrimaryScreen!.WorkingArea.Location);
         Application.DoEvents();
-        var menuButton = Assert.Single(Descendants(form).OfType<Button>(), button => button.AccessibleName == "AgentMeter menu");
+        var menuButton = Assert.Single(Descendants(form).OfType<Button>(), button => button.AccessibleName == "Llumi menu");
         DispatchHiddenClick(menuButton);
         var menu = (ContextMenuStrip)typeof(UsageForm).GetField("actions", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(form)!;
         using var outside = new Form { ShowInTaskbar = false, Size = new Size(100, 100) };

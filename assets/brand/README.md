@@ -10,6 +10,6 @@ The source SVGs and native raster exporter are original reconstructions of the a
 - macOS `Llumi.icns`: 16, 32, 128, 256, 512 points at 1x/2x (up to 1024 px).
 - Windows `Llumi.ico`: 16, 20, 24, 32, 40, 48, 64, 128, 256 px.
 
-Regenerate PNGs using `swift macos/Scripts/make-icon.swift /tmp/Llumi.iconset`, then `iconutil -c icns /tmp/Llumi.iconset`. Windows ICO frames use the exported `windows-*.png` images. AppKit menu rendering uses a template gauge; Windows tray rendering uses a transparent high-contrast gauge with a contrasting outline. Neither uses the colored app tile.
+Regenerate all raster resources with `python3 scripts/export-brand.py`. For individual PNG exports use `swift macos/Scripts/make-icon.swift /tmp/Llumi.iconset`, then `iconutil -c icns /tmp/Llumi.iconset`. Windows ICO frames use the exported `windows-*.png` images. AppKit menu rendering uses a template gauge; Windows tray rendering uses a transparent high-contrast gauge with a contrasting outline. Neither uses the colored app tile.
 
 Provider marks remain separate and unchanged. Historical three-bar artwork survives in Git history and historical release artifacts only. Store tile export is pending the accepted MSIX asset specification; no replacement Store packaging system is introduced.

@@ -1,8 +1,10 @@
+> Llumi migration preparation only. Historical AgentMeter tags and notarization receipts do not cover Llumi; fresh signing/submission needs separate authorization. No final packaging is authorized during the rename.
+
 # macOS distribution
 
-The published beta remains unsigned and unnotarized. Current source prepares 1.1.1, build 1, bundle ID `io.github.praneshsivasankaran.agentmeter`. These scripts prepare a future Developer ID release; they do not configure an Apple account or credentials. Existing beta assets must never be silently replaced. Signing requires independent re-audit and explicit authorization; source version 1.1.1 is not a release-availability claim.
+The published beta remains unsigned and unnotarized. Current source prepares 1.1.1, build 1, bundle ID `io.github.praneshsivasankaran.llumi`. These scripts prepare a future Developer ID release; they do not configure an Apple account or credentials. Existing beta assets must never be silently replaced. Signing requires independent re-audit and explicit authorization; source version 1.1.1 is not a release-availability claim.
 
-Inspect the intended production filename without packaging: `scripts/macos/create-dmg.sh <app> --print-production-name` resolves to `AgentMeter-1.1.1-macos.dmg`. The existing `macos-1.0.0` tag and signed 1.0.0 artifact are superseded and remain unchanged. Do not sign, notarize or tag this candidate until review authorizes it. A future 1.1.1 release needs a new version-appropriate source tag; do not move the historical 1.0.0 tag.
+Inspect the intended production filename without packaging: `scripts/macos/create-dmg.sh <app> --print-production-name` resolves to `Llumi-1.1.1-macos.dmg`. The existing `macos-1.0.0` tag and signed 1.0.0 artifact are superseded and remain unchanged. Do not sign, notarize or tag this candidate until review authorizes it. A future 1.1.1 release needs a new version-appropriate source tag; do not move the historical 1.0.0 tag.
 
 ## Local unsigned rehearsal
 
@@ -10,15 +12,15 @@ From the repository root, with Xcode 27 selected:
 
 ```sh
 scripts/macos/build-release.sh
-scripts/macos/sign-app.sh dist/macos/AgentMeter.app
-scripts/macos/create-dmg.sh dist/macos/AgentMeter.app --unsigned
-scripts/macos/notarize.sh dist/macos/AgentMeter.app
-scripts/macos/verify-release.sh dist/macos/AgentMeter.app --unsigned
+scripts/macos/sign-app.sh dist/macos/Llumi.app
+scripts/macos/create-dmg.sh dist/macos/Llumi.app --unsigned
+scripts/macos/notarize.sh dist/macos/Llumi.app
+scripts/macos/verify-release.sh dist/macos/Llumi.app --unsigned
 ```
 
 The signing and notarization scripts default to **plan only**. The other commands actually build, inspect, and create an **unsigned** local DMG. Output goes into ignored `dist/macos/`; DerivedData stays under `~/Library/Developer/Xcode/DerivedData/AgentMeterDistribution`. Existing artifacts are not overwritten. Move an earlier app/DMG aside before another run.
 
-The DMG contains `AgentMeter.app` and an `Applications` shortcut. Its name uses `AgentMeterReleaseVersion` from the built bundle, with an `-unsigned` suffix for rehearsals. A SHA-256 sidecar is generated. Mount the rehearsal read-only with `hdiutil attach -readonly -nobrowse`, inspect both entries, verify the mounted app, and detach it. This is **NOT SIGNED / NOT NOTARIZED**, not a public release candidate.
+The DMG contains `Llumi.app` and an `Applications` shortcut. Its name uses `LlumiReleaseVersion` from the built bundle, with an `-unsigned` suffix for rehearsals. A SHA-256 sidecar is generated. Mount the rehearsal read-only with `hdiutil attach -readonly -nobrowse`, inspect both entries, verify the mounted app, and detach it. This is **NOT SIGNED / NOT NOTARIZED**, not a public release candidate.
 
 The validator checks identity, version/build, macOS 14 target, expected bundle structure, privacy checks, and universal arm64/x86_64 architecture. Building for Intel is not physical Intel testing.
 
@@ -26,7 +28,7 @@ The validator checks identity, version/build, macOS 14 target, expected bundle s
 
 Expected app entitlements: **none**. App Sandbox remains intentionally disabled.
 
-- Provider queries execute external tools with `posix_spawn`, pipes, bounded lifetime/output, and an isolated working directory. They do not load provider code into AgentMeter. This does not justify disabling library validation or adding JIT/unsigned-memory exceptions.
+- Provider queries execute external tools with `posix_spawn`, pipes, bounded lifetime/output, and an isolated working directory. They do not load provider code into Llumi. This does not justify disabling library validation or adding JIT/unsigned-memory exceptions.
 - Native process metadata, exit sources, NSWorkspace observation, and CoreGraphics window metadata do not require debugger/task-port, Accessibility, or screen-content capture access.
 - SwiftUI, AppKit panels, status items, and system frameworks require no runtime exception.
 - Launch at Login uses `SMAppService.mainApp`; no embedded helper is currently shipped. Registration must be rechecked in the final signed installed app.
@@ -38,7 +40,7 @@ See Apple's [notarization overview](https://developer.apple.com/documentation/se
 
 ## Future signed release — after independent re-audit and authorization
 
-The reserved version is **1.1.1 (build 1)**, with matching `AgentMeterReleaseVersion`. Run the complete tests and privacy/secret/artifact audits, then build a fresh app. Do not reuse the published beta tag for changed bytes. Intended future identity: `Developer ID Application: Pranesh S (K38622WCYD)`; never use it in unsigned validation.
+The reserved version is **1.1.1 (build 1)**, with matching `LlumiReleaseVersion`. Run the complete tests and privacy/secret/artifact audits, then build a fresh app. Do not reuse the published beta tag for changed bytes. Intended future identity: `Developer ID Application: Pranesh S (K38622WCYD)`; never use it in unsigned validation.
 
 Set `DEVELOPER_ID_APPLICATION` to the exact real **Developer ID Application** identity installed in your Keychain. No certificate hash, private key, password, or identity is stored in these scripts. Do not use Apple Development, ad-hoc, or self-signed identities as substitutes.
 
@@ -47,12 +49,12 @@ Set `NOTARY_PROFILE` to an existing `notarytool` Keychain profile. Create it sep
 The following is **future work**, not part of unsigned validation:
 
 ```sh
-scripts/macos/sign-app.sh dist/macos/AgentMeter.app --execute
-scripts/macos/notarize.sh dist/macos/AgentMeter.app --execute
-scripts/macos/create-dmg.sh dist/macos/AgentMeter.app --signed
+scripts/macos/sign-app.sh dist/macos/Llumi.app --execute
+scripts/macos/notarize.sh dist/macos/Llumi.app --execute
+scripts/macos/create-dmg.sh dist/macos/Llumi.app --signed
 # Replace <version> with the new version from the built app.
-scripts/macos/notarize.sh 'dist/macos/AgentMeter-<version>-macos.dmg' --execute
-scripts/macos/verify-release.sh 'dist/macos/AgentMeter-<version>-macos.dmg' --notarized
+scripts/macos/notarize.sh 'dist/macos/Llumi-<version>-macos.dmg' --execute
+scripts/macos/verify-release.sh 'dist/macos/Llumi-<version>-macos.dmg' --notarized
 ```
 
 The app is submitted in a temporary ZIP and stapled first, so the app copied out of the DMG carries its ticket. The signed DMG is submitted and stapled afterward. `notarytool` must return **Accepted**; inspect its local log for warnings. Local notary results/logs stay in ignored `dist/macos/notary.*` and must not be published. The scripts use no deprecated `altool`.

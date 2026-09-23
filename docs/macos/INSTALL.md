@@ -1,3 +1,5 @@
+> Historical AgentMeter beta installation instructions. For the unreleased Llumi migration candidate, see [upgrade guidance](../LLUMI-MIGRATION.md). No Llumi download is published yet.
+
 # AgentMeter for macOS beta
 
 [Download macOS beta 3](https://github.com/Praneshsivasankaran/AgentMeter/releases/tag/macos-0.1.0-beta.3). It remains unsigned and unnotarized. A signed and notarized 1.0.0 build is planned after independent validation; it is not available yet. There is no Mac App Store or production DMG release yet.

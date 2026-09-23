@@ -26,7 +26,7 @@ public sealed class PackagedStartupTests
     public void UnpackagedEnvironmentKeepsOriginalDataLocation()
     {
         Assert.False(PackagedEnvironment.HasIdentity);
-        Assert.Equal(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AgentMeter"), PackagedEnvironment.DataDirectory);
+        Assert.Equal(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Llumi"), PackagedEnvironment.DataDirectory);
     }
     private sealed class Fake(StartupTaskState state) : IStartupTaskAccess
     {

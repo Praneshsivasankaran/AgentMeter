@@ -145,7 +145,7 @@ public sealed class SetupFormTests
             using var form = new SetupForm(flow, () => [], () => { }, preferences.Load,
                 p => { preferences.Save(p); Palette.Apply(p.Appearance); }, startup,
                 () => startup.TrySet(!startup.Enabled), () => finished = true);
-            form.Show(); Button(form, "Set Up AgentMeter").PerformClick();
+            form.Show(); Button(form, "Set Up Llumi").PerformClick();
             Button(form, "Continue").PerformClick(); Assert.Equal(SetupStep.Verify, flow.Step);
             Button(form, "Finish Anyway").PerformClick(); Assert.Equal(SetupStep.Preferences, flow.Step);
             var controls = Descendants(form).OfType<CheckBox>().ToArray();
@@ -157,7 +157,7 @@ public sealed class SetupFormTests
             var launch = controls.Single(c => c.Text == "Launch at Startup");
             typeof(Control).GetMethod("OnClick", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.Invoke(launch, [EventArgs.Empty]);
             Assert.True(startup.Enabled); Assert.True(launch.Checked);
-            Button(form, "Continue").PerformClick(); Button(form, "Start AgentMeter").PerformClick();
+            Button(form, "Continue").PerformClick(); Button(form, "Start Llumi").PerformClick();
             Assert.True(completion.IsComplete()); Assert.True(finished);
         }
         finally { if (Directory.Exists(root)) Directory.Delete(root, true); }
