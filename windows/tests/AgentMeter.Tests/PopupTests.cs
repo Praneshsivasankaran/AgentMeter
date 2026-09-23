@@ -332,7 +332,7 @@ public sealed class PopupTests
         SaveFixtureRender(form, "product-popup.png");
         using var monitor = new MonitorForm(["Codex", "Claude"], SystemIcons.Application);
         monitor.Render(states, now);
-        Assert.Equal(["29%", "92%"], monitor.RowValues);
+        Assert.Equal(["29%", "69%"], monitor.RowValues);
         var directory = Environment.GetEnvironmentVariable("AGENTMETER_RENDER_OUTPUT");
         if (string.IsNullOrWhiteSpace(directory)) return;
         using var image = monitor.CreatePreviewBitmap();

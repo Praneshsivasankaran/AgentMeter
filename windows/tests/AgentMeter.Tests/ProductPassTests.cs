@@ -30,7 +30,7 @@ public sealed class ProductPassTests : IDisposable
     {
         var w = new UsageWindow("five_hour", "5-hour", 80, DateTimeOffset.UtcNow.AddMinutes(-1));
         Assert.Equal(20, w.RemainingPercent); Assert.True(w.ResetPassed(DateTimeOffset.UtcNow));
-        Assert.Contains("Resetting", PopupText.Reset(w, DateTimeOffset.UtcNow));
+        Assert.Equal("Reset passed · awaiting update", PopupText.Reset(w, DateTimeOffset.UtcNow));
     }
     [Fact]
     public void FreshCompletionAndManualReopen()
