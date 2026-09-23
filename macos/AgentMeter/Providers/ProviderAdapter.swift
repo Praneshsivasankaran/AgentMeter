@@ -55,7 +55,7 @@ struct ProviderAdapter: UsageSource {
       _ = try await rpc(
         p, id: 1, method: "initialize",
         params: .object([
-          "clientInfo": .object(["name": .string("agentmeter"), "version": .string("1.0.0")])
+          "clientInfo": .object(["name": .string("agentmeter"), "version": .string("1.1.1")])
         ]))
       try await p.send(.object(["method": .string("initialized")]))
       let before = try Parsers.codexAccount(

@@ -15,12 +15,12 @@ Release packaging removes debugging symbols from the app executable. Keep genera
 
 Build output belongs under Library, outside protected document folders. No provider login, provider installation, signing certificate, or third-party package installation is needed to compile or run synthetic tests. Real usage appears only when supported tools are installed and signed in.
 
-The current source prepares 1.0.0 (build 1); it does not publish or replace the existing beta. For a local unsigned source-build archive after validation:
+The current source prepares 1.1.1 (build 1); it does not publish or replace the existing beta. For a local unsigned source-build archive after validation:
 
 ```sh
 mkdir -p "$HOME/Library/Caches/AgentMeterCandidate"
-ditto -c -k --norsrc --noextattr --keepParent "$HOME/Library/Developer/Xcode/DerivedData/AgentMeter/Build/Products/Release/AgentMeter.app" "$HOME/Library/Caches/AgentMeterCandidate/AgentMeter-1.0.0-unsigned-source-build.zip"
-shasum -a 256 "$HOME/Library/Caches/AgentMeterCandidate/AgentMeter-1.0.0-unsigned-source-build.zip"
+ditto -c -k --norsrc --noextattr --keepParent "$HOME/Library/Developer/Xcode/DerivedData/AgentMeter/Build/Products/Release/AgentMeter.app" "$HOME/Library/Caches/AgentMeterCandidate/AgentMeter-1.1.1-unsigned-source-build.zip"
+shasum -a 256 "$HOME/Library/Caches/AgentMeterCandidate/AgentMeter-1.1.1-unsigned-source-build.zip"
 ```
 
 This creates a local ad-hoc build, not Developer ID signing or notarization. Builds are source-reproducible; byte-identical archives are not promised. The macOS workflow uses GitHub's `xcode-27` preview runner with synthetic tests and no provider authentication or signing secrets. Preview runner availability may vary; no passing badge is advertised until a real run completes.

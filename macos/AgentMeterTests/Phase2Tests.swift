@@ -1,6 +1,126 @@
 import AppKit
 import Foundation
 import XCTest
+
+@MainActor final class SetupTests: XCTestCase {
+  private func suite(_ body: (UserDefaults) -> Void) {
+    let name = "AgentMeter-setup-" + UUID().uuidString
+    let d = UserDefaults(suiteName: name)!
+    defer { d.removePersistentDomain(forName: name) }
+    body(d)
+  }
+  func testFreshInstallShowsSetupEvenAfterEmptyMigration() {
+    suite { d in
+      BetaPreferences.migrate(from: [:], to: d)
+      SetupCompletion.recognizeExisting(defaults: d, old: [:])
+      XCTAssertTrue(SetupFlow(defaults: d).needsAutomaticSetup)
+    }
+  }
+  func testCompletionPersistsOneBooleanOnly() {
+    suite { d in
+      let flow = SetupFlow(defaults: d)
+      flow.complete()
+      XCTAssertFalse(SetupFlow(defaults: d).needsAutomaticSetup)
+      XCTAssertEqual(d.dictionaryRepresentation()[SetupCompletion.key] as? Bool, true)
+    }
+  }
+  func testValidBetaPreferencesSkipAutomaticSetup() {
+    suite { d in
+      SetupCompletion.recognizeExisting(defaults: d, old: ["notchEnabled": false])
+      XCTAssertFalse(SetupFlow(defaults: d).needsAutomaticSetup)
+    }
+  }
+  func testPreviouslyMigratedPreferencesSkipSetup() {
+    suite { d in
+      BetaPreferences.migrate(from: ["appearance": "dark"], to: d)
+      SetupCompletion.recognizeExisting(defaults: d, old: [:])
+      XCTAssertFalse(SetupFlow(defaults: d).needsAutomaticSetup)
+    }
+  }
+  func testInvalidOrUnknownBetaKeysDoNotSkipSetup() {
+    suite { d in
+      SetupCompletion.recognizeExisting(defaults: d,
+        old: ["appearance": "invalid", "notchEnabled": 1, "loginEnabled": true])
+      XCTAssertTrue(SetupFlow(defaults: d).needsAutomaticSetup)
+    }
+  }
+  func testMalformedCompletionFailsSafely() {
+    for value: Any in ["true", 1, ["value": true]] {
+      suite { d in
+        d.set(value, forKey: SetupCompletion.key)
+        SetupCompletion.recognizeExisting(defaults: d, old: ["appearance": "dark"])
+        XCTAssertTrue(SetupFlow(defaults: d).needsAutomaticSetup)
+      }
+    }
+  }
+  func testManualReopenAfterCompletion() {
+    suite { d in
+      let flow = SetupFlow(defaults: d)
+      flow.next(); flow.complete(); flow.reopen()
+      XCTAssertEqual(flow.step, .welcome)
+      XCTAssertFalse(flow.needsAutomaticSetup)
+    }
+  }
+  func testCodexOnlyRoute() { checkRoute([.codex], [.welcome, .providers, .codex, .verify, .preferences, .done]) }
+  func testClaudeOnlyRoute() { checkRoute([.claude], [.welcome, .providers, .claude, .verify, .preferences, .done]) }
+  func testBothRoute() { checkRoute([.codex, .claude], [.welcome, .providers, .codex, .claude, .verify, .preferences, .done]) }
+  func testNeitherRouteIsNotBlocked() { checkRoute([], [.welcome, .providers, .verify, .preferences, .done]) }
+  private func checkRoute(_ selected: Set<ProviderID>, _ expected: [SetupStep]) {
+    suite { d in
+      let flow = SetupFlow(defaults: d); flow.selected = selected
+      for step in expected { XCTAssertEqual(flow.step, step); flow.next() }
+      for step in expected.reversed() { XCTAssertEqual(flow.step, step); flow.back() }
+    }
+  }
+  func testStatusRequiresCurrentVerifiedReading() throws {
+    var s = UsageSnapshot(provider: .codex)
+    XCTAssertEqual(SetupStatus(snapshot: s), .checking)
+    s.apply(.fail(.notInstalled)); XCTAssertEqual(SetupStatus(snapshot: s), .notInstalled)
+    s.apply(.fail(.signedOut)); XCTAssertEqual(SetupStatus(snapshot: s), .signedOut)
+    s.apply(.fail(.incompatible)); XCTAssertEqual(SetupStatus(snapshot: s), .unavailable)
+    s.apply(.success(.init(binding: "synthetic", windows: [], date: Date())))
+    XCTAssertEqual(SetupStatus(snapshot: s), .ready)
+    s.apply(.fail(.timeout, binding: "synthetic"))
+    XCTAssertEqual(SetupStatus(snapshot: s), .unavailable)
+    s.state = .live; s.reading = nil
+    XCTAssertEqual(SetupStatus(snapshot: s), .unavailable)
+  }
+  func testOnboardingSettingsUseExistingPreferencesAndDoNotCompleteEarly() {
+    suite { d in
+      let flow = SetupFlow(defaults: d), preferences = Preferences(defaults: d)
+      SetupCompletion.recognizeExisting(defaults: d, old: [:])
+      preferences.notchEnabled = false; preferences.menuEnabled = false; preferences.appearance = .light
+      let restored = Preferences(defaults: d)
+      XCTAssertFalse(restored.notchEnabled); XCTAssertFalse(restored.menuEnabled)
+      XCTAssertEqual(restored.appearance, .light)
+      XCTAssertTrue(flow.needsAutomaticSetup)
+      SetupCompletion.recognizeExisting(defaults: d, old: [:])
+      XCTAssertTrue(SetupFlow(defaults: d).needsAutomaticSetup)
+    }
+  }
+  func testVerifiedCopyOnlyCommandConstants() {
+    XCTAssertEqual(ProviderSetup.install(.codex), "brew install --cask codex")
+    XCTAssertEqual(ProviderSetup.login(.codex), "codex login")
+    XCTAssertEqual(ProviderSetup.install(.claude), "curl -fsSL https://claude.ai/install.sh | bash")
+    XCTAssertEqual(ProviderSetup.login(.claude), "claude auth login")
+  }
+  func testNotchAppearanceOverridesAndSystemInheritance() {
+    _ = NSApplication.shared
+    let previous = NSApp.appearance
+    defer { NSApp.appearance = previous }
+    let notch = NotchController()
+    defer { notch.close() }
+    for preference in [AppAppearance.light, .dark] {
+      notch.applyAppearance(preference)
+      XCTAssertEqual(notch.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]), preference.native?.name)
+    }
+    notch.applyAppearance(.system)
+    for name in [NSAppearance.Name.aqua, .darkAqua] {
+      NSApp.appearance = NSAppearance(named: name)
+      XCTAssertEqual(notch.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]), name)
+    }
+  }
+}
 import Darwin
 
 @MainActor final class MigrationTests: XCTestCase {

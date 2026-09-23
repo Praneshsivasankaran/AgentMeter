@@ -35,8 +35,12 @@ extension ProviderID {
     self == .codex
       ? Color(red: 0.19, green: 0.68, blue: 0.55) : Color(red: 0.81, green: 0.46, blue: 0.32)
   }
-  var notchAccent: Color {
-    self == .codex
+  func notchAccent(for scheme: ColorScheme) -> Color {
+    if scheme == .light {
+      return self == .codex
+        ? Color(red: 0.08, green: 0.40, blue: 0.31) : Color(red: 0.58, green: 0.27, blue: 0.14)
+    }
+    return self == .codex
       ? Color(red: 0.45, green: 0.9, blue: 0.77) : Color(red: 1, green: 0.73, blue: 0.56)
   }
 }
@@ -73,9 +77,11 @@ struct NotchProviderMark: View {
   var size: CGFloat = 22
   var body: some View {
     Image(provider == .codex ? "CodexLogo" : "ClaudeLogo")
+      .renderingMode(.template)
       .resizable()
       .scaledToFit()
       .frame(width: size, height: size)
+      .foregroundStyle(.primary)
       .accessibilityHidden(true)
   }
 }

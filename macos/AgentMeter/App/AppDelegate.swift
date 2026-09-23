@@ -7,6 +7,8 @@ import SwiftUI
   private var activity: ActivityMonitor!
   private var notch: NotchController!
   private var window: NSWindow!
+  private var setupWindow: NSWindow?
+  private let setup = SetupFlow()
   private var status: NSStatusItem!
   private var schedule: Task<Void, Never>?
   private var wake: Task<Void, Never>?
@@ -59,7 +61,8 @@ import SwiftUI
       && (event?.paramDescriptor(forKeyword: keyAELaunchedAsLogInItem) != nil
         || event?.paramDescriptor(forKeyword: keyAEPropData)?.enumCodeValue
           == keyAELaunchedAsLogInItem)
-    if !loginLaunch { openMain() }
+    if setup.needsAutomaticSetup { openSetup() }
+    else if !loginLaunch { openMain() }
     activity.start()
     refresh()
     schedule = Task { [weak self] in
@@ -104,8 +107,16 @@ import SwiftUI
         title: "Minimize", action: #selector(NSWindow.performMiniaturize(_:)), keyEquivalent: "m"))
     windowItem.submenu = windowMenu
     main.addItem(windowItem)
+    let helpItem = NSMenuItem(title: "Help", action: nil, keyEquivalent: "")
+    let helpMenu = NSMenu(title: "Help")
+    let setupItem = NSMenuItem(title: "Setup AgentMeter…", action: #selector(openSetup), keyEquivalent: "")
+    setupItem.target = self
+    helpMenu.addItem(setupItem)
+    helpItem.submenu = helpMenu
+    main.addItem(helpItem)
     NSApp.mainMenu = main
     NSApp.windowsMenu = windowMenu
+    NSApp.helpMenu = helpMenu
   }
   private func createMenu() {
     guard status == nil else { return }
@@ -166,6 +177,26 @@ import SwiftUI
     }
     notch?.update(model)
   }
+  @objc func openSetup() {
+    guard !quitting else { return }
+    if setupWindow == nil {
+      let w = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 580, height: 610),
+        styleMask: [.titled, .closable, .miniaturizable], backing: .buffered, defer: false)
+      w.title = "Setup AgentMeter"
+      w.isReleasedWhenClosed = false
+      w.delegate = self
+      w.contentView = NSHostingView(rootView: SetupView(model: model, flow: setup) { [weak self] in
+        self?.setupWindow?.orderOut(nil)
+        self?.openMain()
+      })
+      w.center()
+      setupWindow = w
+    }
+    if setupWindow?.isVisible != true { setup.reopen() }
+    setupWindow?.deminiaturize(nil)
+    setupWindow?.makeKeyAndOrderFront(nil)
+    NSApp.activate(ignoringOtherApps: true)
+  }
   @objc func openSettings() {
     openMain()
     model.destination = .settings
@@ -200,6 +231,7 @@ import SwiftUI
     if let status { NSStatusBar.system.removeStatusItem(status) }
     status = nil
     window?.orderOut(nil)
+    setupWindow?.orderOut(nil)
     let service = store!
     Task.detached {
       await service.stop()

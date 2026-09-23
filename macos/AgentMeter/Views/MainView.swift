@@ -24,7 +24,7 @@ struct MainView: View {
     }.navigationSplitViewStyle(.balanced)
   }
 }
-private struct SettingsView: View {
+struct SettingsView: View {
   @Bindable var preferences: Preferences
   let login: LoginItem
   var body: some View {
@@ -64,10 +64,9 @@ private struct AboutView: View {
       MeterMark().scaleEffect(2).frame(height: 50)
       Text("AgentMeter").font(.title.bold())
       Text(
-        "Version \(Bundle.main.object(forInfoDictionaryKey:"AgentMeterReleaseVersion") as? String ?? "1.0.0")"
+        "Version \(Bundle.main.object(forInfoDictionaryKey:"AgentMeterReleaseVersion") as? String ?? "1.1.1")"
       ).font(.callout).foregroundStyle(.secondary)
       Text("AI coding allowance, quietly at a glance.").font(.callout).foregroundStyle(.secondary)
-      Text("Native. Local. No AgentMeter account.").font(.caption).foregroundStyle(.tertiary)
     }.frame(maxWidth: .infinity, maxHeight: .infinity)
   }
 }

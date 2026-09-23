@@ -8,6 +8,11 @@ private final class MonitorPanel: NSPanel {
   override var canBecomeMain: Bool { false }
 }
 final class TrackingSurface: NSView {
+  var appearanceChanged: () -> Void = {}
+  override func viewDidChangeEffectiveAppearance() {
+    super.viewDidChangeEffectiveAppearance()
+    appearanceChanged()
+  }
   override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
   var hover: (Bool) -> Void = { _ in }
   var clicked: () -> Void = {}
@@ -51,6 +56,11 @@ final class TrackingSurface: NSView {
   var onScreen: Bool { panel.occlusionState.contains(.visible) }
   var frame: NSRect { panel.frame }
   var phase: String { presentation.state.phase.rawValue }
+  var effectiveAppearance: NSAppearance { panel.effectiveAppearance }
+  func applyAppearance(_ appearance: AppAppearance) {
+    panel.appearance = appearance.native
+    updateMaterial()
+  }
   init(open: @escaping () -> Void = {}) {
     click = open
     panel.isOpaque = false
@@ -58,7 +68,6 @@ final class TrackingSurface: NSView {
     panel.hidesOnDeactivate = false
     panel.level = .statusBar
     panel.hasShadow = true
-    panel.appearance = NSAppearance(named: .darkAqua)
     panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
     if #available(macOS 15.0, *) { panel.collectionBehavior.insert(.canJoinAllApplications) }
     surface.wantsLayer = true
@@ -79,6 +88,7 @@ final class TrackingSurface: NSView {
     host.autoresizingMask = [.width, .height]
     surface.addSubview(host)
     panel.contentView = surface
+    surface.appearanceChanged = { [weak self] in self?.updateMaterial() }
     updateMaterial()
     observers.append(
       NotificationCenter.default.addObserver(
@@ -97,13 +107,16 @@ final class TrackingSurface: NSView {
   private func updateMaterial() {
     let opaque = NSWorkspace.shared.accessibilityDisplayShouldReduceTransparency
     material.isHidden = opaque
-    tint.layer?.backgroundColor = NSColor.black.withAlphaComponent(opaque ? 1 : 0.78).cgColor
-    surface.layer?.backgroundColor = NSColor.black.withAlphaComponent(opaque ? 1 : 0.65).cgColor
+    surface.effectiveAppearance.performAsCurrentDrawingAppearance {
+      tint.layer?.backgroundColor = NSColor.windowBackgroundColor.withAlphaComponent(opaque ? 1 : 0.78).cgColor
+      surface.layer?.backgroundColor = NSColor.windowBackgroundColor.withAlphaComponent(opaque ? 1 : 0.65).cgColor
+      surface.layer?.borderColor = NSColor.separatorColor.cgColor
+    }
     surface.layer?.borderWidth =
       NSWorkspace.shared.accessibilityDisplayShouldIncreaseContrast ? 1 : 0.5
-    surface.layer?.borderColor = NSColor.white.withAlphaComponent(0.18).cgColor
   }
   func update(_ model: Presentation) {
+    applyAppearance(model.preferences.appearance)
     let front = NSWorkspace.shared.frontmostApplication?.processIdentifier
     let old = presentation.state
     presentation.state.reconcile(activity: model.activity, enabled: model.preferences.notchEnabled)

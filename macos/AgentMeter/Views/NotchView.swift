@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct NotchView: View {
+  @Environment(\.colorScheme) private var colorScheme
   let model: NotchPresentation
   var body: some View {
     Group {
@@ -8,24 +9,24 @@ struct NotchView: View {
         TimelineView(.periodic(from: .now, by: 30)) { context in
           HStack(alignment: .top, spacing: 18) {
             ForEach(model.rows) { row in
-              if row.id != model.rows.first?.id { Divider().overlay(.white.opacity(0.15)) }
+              if row.id != model.rows.first?.id { Divider() }
               VStack(alignment: .leading, spacing: 12) {
                 HStack(spacing: 8) {
                   NotchProviderMark(provider: row.id, size: 23)
                   Text(row.percentage).font(.system(size: 17, weight: .semibold)).monospacedDigit()
-                    .foregroundStyle(row.id.notchAccent)
+                    .foregroundStyle(row.id.notchAccent(for: colorScheme))
                   if model.rows.count == 1 {
-                    Text("remaining").font(.caption).foregroundStyle(.white.opacity(0.8))
+                    Text("remaining").font(.caption).foregroundStyle(.secondary)
                   }
                 }
-                AllowanceBar(remaining: row.snapshot.primary?.remaining, color: row.id.notchAccent)
+                AllowanceBar(remaining: row.snapshot.primary?.remaining, color: row.id.notchAccent(for: colorScheme))
                 VStack(alignment: .leading, spacing: 4) {
                   if let primary = row.snapshot.primary {
                     Text(
                       (row.id == .codex ? "Main · " : "")
                         + (UsageCopy.duration(primary.durationMinutes) ?? primary.label)
                     )
-                    .font(.caption2).foregroundStyle(.white.opacity(0.8))
+                    .font(.caption2).foregroundStyle(.secondary)
                   }
                   Text(
                     row.snapshot.primary?.resetText(at: context.date) ?? row.snapshot.state.rawValue
@@ -33,7 +34,7 @@ struct NotchView: View {
                   if let reset = row.snapshot.primary?.reset, reset > context.date {
                     Text(reset, format: .dateTime.month(.abbreviated).day().hour().minute()).font(
                       .caption2
-                    ).foregroundStyle(.white.opacity(0.8))
+                    ).foregroundStyle(.secondary)
                   }
                   if row.snapshot.state == .stale {
                     Text("Stale · last verified allowance").font(.caption2).foregroundStyle(
@@ -49,12 +50,12 @@ struct NotchView: View {
         HStack(spacing: 12) {
           ForEach(model.rows) { row in
             if row.id != model.rows.first?.id {
-              Rectangle().fill(.white.opacity(0.22)).frame(width: 1, height: 16)
+              Rectangle().fill(.primary.opacity(0.22)).frame(width: 1, height: 16)
             }
             HStack(spacing: 7) {
               NotchProviderMark(provider: row.id, size: 19)
               Text(row.percentage).font(.system(size: 13, weight: .semibold)).monospacedDigit()
-                .foregroundStyle(row.id.notchAccent)
+                .foregroundStyle(row.id.notchAccent(for: colorScheme))
               if row.snapshot.state == .stale {
                 Circle().fill(.secondary).frame(width: 4, height: 4).accessibilityLabel("Stale")
               }
@@ -63,6 +64,6 @@ struct NotchView: View {
         }.padding(.horizontal, 16)
       }
     }.frame(maxWidth: .infinity, maxHeight: .infinity)
-      .foregroundStyle(.white).environment(\.colorScheme, .dark)
+      .foregroundStyle(.primary)
   }
 }

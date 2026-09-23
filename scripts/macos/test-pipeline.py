@@ -5,10 +5,21 @@ ROOT = pathlib.Path(__file__).resolve().parents[2]
 APP = str(pathlib.Path(sys.argv.pop(1)).resolve())
 SCRIPTS = ROOT / 'scripts/macos'
 class DistributionGuards(unittest.TestCase):
+    def test_setup_is_copy_only_and_notch_has_no_forced_dark_scheme(self):
+        setup = (ROOT/'macos/AgentMeter/Views/SetupView.swift').read_text()
+        flow = (ROOT/'macos/AgentMeter/Presentation/SetupFlow.swift').read_text()
+        for forbidden in ('Process(', 'Subprocess.', 'NSAppleScript', 'OSAScript', 'URLSession', 'readLine('):
+            self.assertNotIn(forbidden, setup + flow)
+        self.assertIn('model.refreshAction()', setup)
+        self.assertIn('NSPasteboard.general.setString(command', setup)
+        notch = (ROOT/'macos/AgentMeter/Views/NotchView.swift').read_text()
+        self.assertNotIn('environment(\\.colorScheme, .dark)', notch)
+        self.assertNotIn('Native. Local. No AgentMeter account.',
+                         (ROOT/'macos/AgentMeter/Views/MainView.swift').read_text())
     def test_production_name_without_packaging(self):
         r = self.run_script('create-dmg.sh', APP, '--print-production-name')
         self.assertEqual(r.returncode, 0, r.stderr)
-        self.assertEqual(r.stdout.splitlines()[-1], 'AgentMeter-1.0.0-macos.dmg')
+        self.assertEqual(r.stdout.splitlines()[-1], 'AgentMeter-1.1.1-macos.dmg')
     def test_rejects_placeholder_identity_and_incoherent_versions(self):
         for key, value in [('CFBundleIdentifier', 'local.agentmeter.mac'),
                            ('CFBundleShortVersionString', '0.1.0'),

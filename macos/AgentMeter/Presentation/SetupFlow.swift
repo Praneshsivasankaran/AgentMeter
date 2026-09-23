@@ -1,0 +1,84 @@
+import Foundation
+import CoreFoundation
+import Observation
+
+enum SetupCompletion {
+  static let key = "setupCompleted"
+  static func isComplete(_ defaults: UserDefaults) -> Bool {
+    guard let value = defaults.object(forKey: key) as? NSNumber,
+      CFGetTypeID(value) == CFBooleanGetTypeID() else { return false }
+    return value.boolValue
+  }
+  static func hasPreferences(_ values: [String: Any]) -> Bool {
+    if let value = values["appearance"] as? String, AppAppearance(rawValue: value) != nil { return true }
+    return ["notchEnabled", "menuEnabled"].contains { key in
+      guard let value = values[key] as? NSNumber else { return false }
+      return CFGetTypeID(value) == CFBooleanGetTypeID()
+    }
+  }
+  static func recognizeExisting(defaults: UserDefaults, old: [String: Any]) {
+    guard defaults.object(forKey: key) == nil else { return }
+    let current = Dictionary(uniqueKeysWithValues: ["appearance", "notchEnabled", "menuEnabled"].compactMap {
+      key in defaults.object(forKey: key).map { (key, $0) }
+    })
+    // Persist false for a fresh install too: changing preferences partway through setup
+    // must not make an incomplete first run look like an existing installation later.
+    defaults.set(hasPreferences(current) || hasPreferences(old), forKey: key)
+  }
+}
+
+enum SetupStep: Equatable {
+  case welcome, providers, codex, claude, verify, preferences, done
+}
+
+enum SetupStatus: String {
+  case checking = "Checking…"
+  case notInstalled = "Not installed"
+  case signedOut = "Installed — sign in required"
+  case ready = "Ready"
+  case unavailable = "Unable to verify — check again"
+  init(snapshot: UsageSnapshot) {
+    switch snapshot.state {
+    case .live: self = snapshot.reading == nil ? .unavailable : .ready
+    case .notInstalled: self = .notInstalled
+    case .signedOut: self = .signedOut
+    case .loading: self = .checking
+    case .stale, .unavailable: self = .unavailable
+    }
+  }
+}
+
+@MainActor @Observable final class SetupFlow {
+  private let defaults: UserDefaults
+  private(set) var step: SetupStep = .welcome
+  var selected: Set<ProviderID> = Set(ProviderID.allCases)
+  var needsAutomaticSetup: Bool { !SetupCompletion.isComplete(defaults) }
+  var steps: [SetupStep] {
+    [.welcome, .providers] + (selected.contains(.codex) ? [.codex] : [])
+      + (selected.contains(.claude) ? [.claude] : []) + [.verify, .preferences, .done]
+  }
+  init(defaults: UserDefaults = .standard) { self.defaults = defaults }
+  func reopen() { step = .welcome }
+  func next() {
+    guard let index = steps.firstIndex(of: step), index + 1 < steps.count else { return }
+    step = steps[index + 1]
+  }
+  func back() {
+    guard let index = steps.firstIndex(of: step), index > 0 else { return }
+    step = steps[index - 1]
+  }
+  func complete() { defaults.set(true, forKey: SetupCompletion.key) }
+}
+
+// Copy-only instructions verified against official docs on 2026-09-23.
+enum ProviderSetup {
+  static func install(_ provider: ProviderID) -> String {
+    provider == .codex ? "brew install --cask codex" : "curl -fsSL https://claude.ai/install.sh | bash"
+  }
+  static func login(_ provider: ProviderID) -> String {
+    provider == .codex ? "codex login" : "claude auth login"
+  }
+  static func documentation(_ provider: ProviderID) -> URL {
+    URL(string: provider == .codex ? "https://learn.chatgpt.com/docs/codex/cli" : "https://code.claude.com/docs/en/quickstart")!
+  }
+}

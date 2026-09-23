@@ -7,7 +7,7 @@ assert p['CFBundleIdentifier'] == 'io.github.praneshsivasankaran.agentmeter', 'U
 assert p['CFBundleExecutable'] == 'AgentMeter', 'Unexpected executable'
 for key in ('CFBundleShortVersionString', 'CFBundleVersion', 'AgentMeterReleaseVersion'):
     assert re.fullmatch(r'[0-9][A-Za-z0-9.\-]*', p[key]), 'Invalid version'
-assert p['CFBundleShortVersionString'] == p['AgentMeterReleaseVersion'] == '1.0.0', 'Production version mismatch'
+assert p['CFBundleShortVersionString'] == p['AgentMeterReleaseVersion'] == '1.1.1', 'Production version mismatch'
 assert p['CFBundleVersion'] == '1', 'Production build mismatch'
 assert p['LSMinimumSystemVersion'] == '14.0', 'Review changed deployment target'
 allowed = {'Contents', 'Contents/MacOS', 'Contents/Resources'}

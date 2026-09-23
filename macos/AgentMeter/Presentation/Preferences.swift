@@ -7,9 +7,12 @@ enum BetaPreferences {
   static let oldDomain = "local.agentmeter.mac"
   static let completion = "betaPreferencesMigrated"
   static func migrateIfNeeded() {
+    let needsOld = UserDefaults.standard.object(forKey: completion) == nil
+      || UserDefaults.standard.object(forKey: SetupCompletion.key) == nil
+    let old = needsOld ? (UserDefaults.standard.persistentDomain(forName: oldDomain) ?? [:]) : [:]
+    SetupCompletion.recognizeExisting(defaults: .standard, old: old)
     guard UserDefaults.standard.object(forKey: completion) == nil else { return }
-    migrate(from: UserDefaults.standard.persistentDomain(forName: oldDomain) ?? [:],
-      to: .standard)
+    migrate(from: old, to: .standard)
   }
   static func migrate(from old: [String: Any], to defaults: UserDefaults) {
     guard defaults.object(forKey: completion) == nil else { return }

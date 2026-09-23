@@ -733,6 +733,8 @@
 				<string>A2E507111111111111111111</string>
 				<string>8E9C4499C3961290BA281059</string>
 				<string>EE540803E30B6C12A7313729</string>
+				<string>7B7915B18772F6AD4F5D2F82</string>
+				<string>735E830F18D6A28E57FE5459</string>
 			</array>
 			<key>sourceTree</key>
 			<string>&lt;group&gt;</string>
@@ -846,7 +848,7 @@
 					<string>@loader_path/../Frameworks</string>
 				</array>
 				<key>MARKETING_VERSION</key>
-				<string>1.0.0</string>
+				<string>1.1.1</string>
 				<key>CURRENT_PROJECT_VERSION</key>
 				<string>1</string>
 				<key>PRODUCT_BUNDLE_IDENTIFIER</key>
@@ -882,7 +884,7 @@
 					<string>@loader_path/../Frameworks</string>
 				</array>
 				<key>MARKETING_VERSION</key>
-				<string>1.0.0</string>
+				<string>1.1.1</string>
 				<key>CURRENT_PROJECT_VERSION</key>
 				<string>1</string>
 				<key>PRODUCT_BUNDLE_IDENTIFIER</key>
@@ -938,7 +940,7 @@
 					<string>@loader_path/../Frameworks</string>
 				</array>
 				<key>MARKETING_VERSION</key>
-				<string>1.0.0</string>
+				<string>1.1.1</string>
 				<key>CURRENT_PROJECT_VERSION</key>
 				<string>1</string>
 				<key>PRODUCT_BUNDLE_IDENTIFIER</key>
@@ -974,7 +976,7 @@
 					<string>@loader_path/../Frameworks</string>
 				</array>
 				<key>MARKETING_VERSION</key>
-				<string>1.0.0</string>
+				<string>1.1.1</string>
 				<key>CURRENT_PROJECT_VERSION</key>
 				<string>1</string>
 				<key>PRODUCT_BUNDLE_IDENTIFIER</key>
@@ -1036,6 +1038,8 @@
 				<string>C0DDFC187504FAC4A3B3D579</string>
 				<string>DC0EC5574EDF741F94E618B1</string>
 				<string>54B171D60ABF3FEB82DD0164</string>
+				<string>F735F07F82FE845C513272D7</string>
+				<string>CE107BDD051CA48FB887A709</string>
 			</array>
 			<key>runOnlyForDeploymentPostprocessing</key>
 			<integer>0</integer>
@@ -1123,6 +1127,8 @@
 				<string>D018ED8916F80FDC591F9782</string>
 				<string>F21AF5C270D021FB0B3D8891</string>
 				<string>D7FFA7514123ED0493F6F89F</string>
+				<string>C6668677415F4DA294E2AC83</string>
+				<string>B333B3767C94CC3C2580BECA</string>
 			</array>
 			<key>runOnlyForDeploymentPostprocessing</key>
 			<integer>0</integer>
@@ -1263,6 +1269,56 @@
 			<string>PBXBuildFile</string>
 			<key>fileRef</key>
 			<string>EE540803E30B6C12A7313729</string>
+		</dict>
+		<key>7B7915B18772F6AD4F5D2F82</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>AgentMeter/Presentation/SetupFlow.swift</string>
+			<key>sourceTree</key>
+			<string>&lt;group&gt;</string>
+		</dict>
+		<key>F735F07F82FE845C513272D7</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+			<key>fileRef</key>
+			<string>7B7915B18772F6AD4F5D2F82</string>
+		</dict>
+		<key>C6668677415F4DA294E2AC83</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+			<key>fileRef</key>
+			<string>7B7915B18772F6AD4F5D2F82</string>
+		</dict>
+		<key>735E830F18D6A28E57FE5459</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>AgentMeter/Views/SetupView.swift</string>
+			<key>sourceTree</key>
+			<string>&lt;group&gt;</string>
+		</dict>
+		<key>CE107BDD051CA48FB887A709</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+			<key>fileRef</key>
+			<string>735E830F18D6A28E57FE5459</string>
+		</dict>
+		<key>B333B3767C94CC3C2580BECA</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+			<key>fileRef</key>
+			<string>735E830F18D6A28E57FE5459</string>
 		</dict>
 	</dict>
 	<key>rootObject</key>
