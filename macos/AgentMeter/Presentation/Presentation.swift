@@ -16,6 +16,11 @@ enum Destination: String, CaseIterable, Identifiable {
 
 @MainActor @Observable final class Presentation {
   var destination: Destination? = .usage
+  var setupCheckRequest = 0
+  func showSetupChecks() {
+    destination = .settings
+    setupCheckRequest += 1
+  }
   var manuallyRefreshing = false
   let preferences = Preferences()
   let loginItem = LoginItem()

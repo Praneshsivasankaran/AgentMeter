@@ -345,4 +345,17 @@ import Darwin
     XCTAssertEqual(rows.map(\.percentage), ["…", "100%"])
     XCTAssertTrue(rows[1].accessibility.contains("Claude, 100% remaining"))
   }
+  func testCheckSetupRoutesToSettingsAndSupportsRepeatedRequests() {
+    let model = Presentation()
+    XCTAssertEqual(model.setupCheckRequest, 0)
+    model.showSetupChecks()
+    XCTAssertEqual(model.destination, .settings)
+    XCTAssertEqual(model.setupCheckRequest, 1)
+    model.destination = .about
+    model.showSetupChecks()
+    XCTAssertEqual(model.destination, .settings)
+    XCTAssertEqual(model.setupCheckRequest, 2)
+    XCTAssertFalse(model.manuallyRefreshing)
+  }
+
 }

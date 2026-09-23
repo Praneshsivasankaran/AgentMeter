@@ -17,7 +17,8 @@ struct MainView: View {
       Group {
         switch model.destination ?? .usage {
         case .usage: UsageView(model: model)
-        case .settings: SettingsView(preferences: model.preferences, login: model.loginItem)
+        case .settings:
+          SettingsView(preferences: model.preferences, login: model.loginItem, checks: model)
         case .about: AboutView()
         }
       }.frame(minWidth: 410, minHeight: 420).background(Color(nsColor: .windowBackgroundColor))
@@ -27,34 +28,51 @@ struct MainView: View {
 struct SettingsView: View {
   @Bindable var preferences: Preferences
   let login: LoginItem
+  var checks: Presentation? = nil
   var body: some View {
     VStack(alignment: .leading, spacing: 20) {
       Text("Settings").font(.title2.bold())
-      Form {
-        Section("General") {
-          Toggle(isOn: Binding(get: { login.enabled }, set: { login.setEnabled($0) })) {
-            Label("Launch at Login", systemImage: "power")
+      ScrollViewReader { proxy in
+        Form {
+          Section("General") {
+            Toggle(isOn: Binding(get: { login.enabled }, set: { login.setEnabled($0) })) {
+              Label("Launch at Login", systemImage: "power")
+            }
+            if let message = login.message {
+              Text(message).font(.caption).foregroundStyle(.secondary)
+            }
+            Toggle(isOn: $preferences.notchEnabled) {
+              Label("Notch Monitor", systemImage: "macbook")
+            }
+            Toggle(isOn: $preferences.menuEnabled) {
+              Label("Menu Bar Icon", systemImage: "menubar.rectangle")
+            }
           }
-          if let message = login.message {
-            Text(message).font(.caption).foregroundStyle(.secondary)
+          Section("Appearance") {
+            Picker(selection: $preferences.appearance) {
+              ForEach(AppAppearance.allCases) { Text($0.title).tag($0) }
+            } label: {
+              Label("Appearance", systemImage: "circle.lefthalf.filled")
+            }
           }
-          Toggle(isOn: $preferences.notchEnabled) { Label("Notch Monitor", systemImage: "macbook") }
-          Toggle(isOn: $preferences.menuEnabled) {
-            Label("Menu Bar Icon", systemImage: "menubar.rectangle")
+          if let checks {
+            Section {
+              CheckSetupView(model: checks).id("setup-checks")
+            }
           }
-        }
-        Section("Appearance") {
-          Picker(selection: $preferences.appearance) {
-            ForEach(AppAppearance.allCases) { Text($0.title).tag($0) }
-          } label: {
-            Label("Appearance", systemImage: "circle.lefthalf.filled")
+        }.formStyle(.grouped).scrollContentBackground(.hidden)
+          .onAppear {
+            if let checks, checks.setupCheckRequest > 0 {
+              proxy.scrollTo("setup-checks", anchor: .top)
+            }
           }
-        }
-      }.formStyle(.grouped).scrollContentBackground(.hidden)
+          .onChange(of: checks?.setupCheckRequest) { _, _ in
+            proxy.scrollTo("setup-checks", anchor: .top)
+          }
+      }
       Text("AgentMeter remains available from the Dock when the menu-bar icon is hidden.").font(
         .caption
       ).foregroundStyle(.secondary)
-      Spacer(minLength: 0)
     }.padding(24).onAppear { login.synchronize() }
   }
 }

@@ -8,7 +8,6 @@ import SwiftUI
   private var notch: NotchController!
   private var window: NSWindow!
   private var setupWindow: NSWindow?
-  private var checkWindow: NSWindow?
   private let setup = SetupFlow()
   private var status: NSStatusItem!
   private var schedule: Task<Void, Never>?
@@ -203,17 +202,8 @@ import SwiftUI
   }
   @objc func openCheckSetup() {
     guard !quitting else { return }
-    if checkWindow == nil {
-      let w = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 580, height: 390),
-        styleMask: [.titled, .closable], backing: .buffered, defer: false)
-      w.title = "Check Setup"
-      w.isReleasedWhenClosed = false
-      w.contentView = NSHostingView(rootView: CheckSetupView(model: model))
-      w.center()
-      checkWindow = w
-    }
-    checkWindow?.makeKeyAndOrderFront(nil)
-    NSApp.activate(ignoringOtherApps: true)
+    openSettings()
+    model.showSetupChecks()
     manualRefresh()
   }
   @objc func openSettings() {
@@ -251,7 +241,6 @@ import SwiftUI
     status = nil
     window?.orderOut(nil)
     setupWindow?.orderOut(nil)
-    checkWindow?.orderOut(nil)
     let service = store!
     Task.detached {
       await service.stop()
