@@ -47,3 +47,36 @@ public sealed class LlumiMigrationTests
         Assert.Equal("AgentMeterStartup",WindowsStartupTaskAccess.TaskId);
     }
 }
+
+[Collection("Windows UI")]
+public sealed class LlumiInstanceProcessTests
+{
+    [Theory]
+    [InlineData("Local\\Llumi.V1.")]
+    [InlineData("Local\\AgentMeter.V0.1.")]
+    public void ExistingCurrentOrLegacyMutexStopsRealAppBeforeServices(string prefix)
+    {
+        using var owner = new Mutex(true, prefix + Environment.UserName, out var first);
+        Assert.True(first);
+        var children = new List<System.Diagnostics.Process>();
+        var log = Path.Combine(PackagedEnvironment.DataDirectory, "logs", "llumi.log");
+        var before = File.Exists(log) ? File.ReadAllText(log) : null;
+        try
+        {
+            for (var i=0;i<4;i++)
+                children.Add(System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(
+                    Path.Combine(AppContext.BaseDirectory,"Llumi.exe"),"--startup") { UseShellExecute=false })!);
+            foreach(var child in children)
+            {
+                Assert.True(child.WaitForExit(10_000),"Duplicate must exit promptly");
+                Assert.Equal(0,child.ExitCode);
+            }
+            Assert.Equal(before,File.Exists(log)?File.ReadAllText(log):null);
+        }
+        finally
+        {
+            foreach(var child in children) { if(!child.HasExited) { child.Kill(true); child.WaitForExit(); } child.Dispose(); }
+            owner.ReleaseMutex();
+        }
+    }
+}

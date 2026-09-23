@@ -23,7 +23,7 @@ public sealed class PackagedStartupTests
         Assert.Equal(StartupTaskState.DisabledByUser, access.State);
     }
     [Fact]
-    public void UnpackagedEnvironmentKeepsOriginalDataLocation()
+    public void UnpackagedEnvironmentUsesLlumiDataLocation()
     {
         Assert.False(PackagedEnvironment.HasIdentity);
         Assert.Equal(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Llumi"), PackagedEnvironment.DataDirectory);
