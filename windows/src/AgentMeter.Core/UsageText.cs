@@ -48,7 +48,7 @@ public static class UsageText
             var qualifier = s.Status == ProviderStatus.Loading ? "loading" : s.Failure != FailureKind.None ? "unavailable" : s.IsStale(now) ? "cached/stale" : "live";
             return $"{s.Name}: {qualifier}";
         });
-        var tooltip = "AgentMeter | " + string.Join(" | ", parts);
+        var tooltip = "Llumi | " + string.Join(" | ", parts);
         return tooltip[..Math.Min(63, tooltip.Length)];
     }
 }

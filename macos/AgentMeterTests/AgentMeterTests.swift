@@ -561,7 +561,7 @@ private actor FakeSource: UsageSource {
   }
   func testBuiltAppHasNoPrivacyUsageDescriptions() throws {
     let app = Bundle(for: PrivacyTests.self).bundleURL.deletingLastPathComponent()
-      .appendingPathComponent("AgentMeter.app/Contents/Info.plist")
+      .appendingPathComponent("Llumi.app/Contents/Info.plist")
     let data = try Data(contentsOf: app)
     let plist = try XCTUnwrap(
       try PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any])

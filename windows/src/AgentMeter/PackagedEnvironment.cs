@@ -13,7 +13,7 @@ internal static class PackagedEnvironment
     // AppData view into existing portable preferences. Windows manages its lifecycle.
     internal static string DataDirectory => HasIdentity
         ? ApplicationData.Current.LocalFolder.Path
-        : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AgentMeter");
+        : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Llumi");
 
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
     private static extern int GetCurrentPackageFullName(ref uint length, nint name);

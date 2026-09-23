@@ -1,6 +1,6 @@
 # Third-party materials
 
-The MIT license covers AgentMeter's original source and documentation. It does not relicense dependencies, vendor software, trademarks, logos, or other third-party assets.
+The MIT license covers Llumi's original source and documentation. It does not relicense dependencies, vendor software, trademarks, logos, or other third-party assets.
 
 The macOS application bundles no provider executable or SDK. It invokes the user's separately installed provider tools, which retain their own terms. Provider artwork is identified in [the asset provenance](macos/AgentMeter/Resources/ProviderMarks.md); displaying it does not imply endorsement or grant trademark rights.
 
@@ -40,7 +40,7 @@ the [Claude mark](https://claude.ai/favicon.svg). Geometry is unchanged; foregro
 color follows the application appearance. These marks remain vendor property
 under their respective artwork and trademark terms, including
 [OpenAI's brand guidance](https://openai.com/brand/). The three ascending bars are
-original AgentMeter artwork. No external font files are bundled.
+original Llumi artwork. No external font files are bundled.
 
 The local build produces a per-file dependency inventory. That inventory and
 these notices do not constitute approval of a future binary: review the exact

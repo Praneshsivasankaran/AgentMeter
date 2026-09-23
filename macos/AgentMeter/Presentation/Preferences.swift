@@ -4,28 +4,41 @@ import ServiceManagement
 import CoreFoundation
 
 enum BetaPreferences {
+  // Ordered newest first. These domains are read-only migration sources.
   static let oldDomain = "local.agentmeter.mac"
-  static let completion = "betaPreferencesMigrated"
+  static let legacyDomains = ["io.github.praneshsivasankaran.agentmeter", oldDomain]
+  static let completion = "llumiPreferencesMigrated"
+  static func boolean(_ value: Any?) -> Bool? {
+    guard let number = value as? NSNumber, CFGetTypeID(number) == CFBooleanGetTypeID() else { return nil }
+    return number.boolValue
+  }
+  static func valid(_ value: Any?, key: String) -> Bool {
+    if key == "appearance" { return (value as? String).flatMap(AppAppearance.init(rawValue:)) != nil }
+    return boolean(value) != nil
+  }
   static func migrateIfNeeded() {
-    let needsOld = UserDefaults.standard.object(forKey: completion) == nil
-      || UserDefaults.standard.object(forKey: SetupCompletion.key) == nil
-    let old = needsOld ? (UserDefaults.standard.persistentDomain(forName: oldDomain) ?? [:]) : [:]
-    SetupCompletion.recognizeExisting(defaults: .standard, old: old)
-    guard UserDefaults.standard.object(forKey: completion) == nil else { return }
-    migrate(from: old, to: .standard)
+    let defaults = UserDefaults.standard
+    guard boolean(defaults.object(forKey: completion)) != true else { return }
+    migrate(sources: legacyDomains.map { defaults.persistentDomain(forName: $0) ?? [:] }, to: defaults)
   }
   static func migrate(from old: [String: Any], to defaults: UserDefaults) {
-    guard defaults.object(forKey: completion) == nil else { return }
-    for key in ["notchEnabled", "menuEnabled"] where defaults.object(forKey: key) == nil {
-      if let value = old[key] as? NSNumber, CFGetTypeID(value) == CFBooleanGetTypeID() {
-        defaults.set(value.boolValue, forKey: key)
+    migrate(sources: [old], to: defaults)
+  }
+  static func migrate(sources: [[String: Any]], to defaults: UserDefaults) {
+    guard boolean(defaults.object(forKey: completion)) != true else { return }
+    let keys = ["notchEnabled", "menuEnabled", "appearance", SetupCompletion.key]
+    for key in keys where !valid(defaults.object(forKey: key), key: key) {
+      if let source = sources.first(where: { valid($0[key], key: key) }), let value = source[key] {
+        defaults.set(value, forKey: key)
       }
     }
-    if defaults.object(forKey: "appearance") == nil, let value = old["appearance"] as? String,
-      ["system", "light", "dark"].contains(value) {
-      defaults.set(value, forKey: "appearance")
+    // Existing valid preferences suppress first-run setup, but explicit false wins.
+    if boolean(defaults.object(forKey: SetupCompletion.key)) == nil {
+      let existing = sources.contains(where: SetupCompletion.hasPreferences)
+        || SetupCompletion.hasPreferences(defaults.dictionaryRepresentation())
+      defaults.set(existing, forKey: SetupCompletion.key)
     }
-    // Login registration is deliberately NOT a preference. The old domain is retained.
+    // SMAppService registration is never inferred from a preference.
     defaults.set(true, forKey: completion)
   }
 }

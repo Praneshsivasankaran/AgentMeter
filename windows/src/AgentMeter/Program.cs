@@ -9,7 +9,7 @@ internal static class Program
     [STAThread]
     private static int Main(string[] args)
     {
-        var instanceName = "Local\\AgentMeter.V0.1." + Environment.UserName;
+        var instanceName = "Local\\Llumi.V1." + Environment.UserName;
         if (args.Contains("--quit", StringComparer.Ordinal))
         {
             try
@@ -20,6 +20,19 @@ internal static class Program
             }
             catch (UnauthorizedAccessException) { return 1; }
         }
+        ApplicationConfiguration.Initialize();
+        using var singleton = new Mutex(true, instanceName, out var isFirst);
+        using var showEvent = new EventWaitHandle(false, EventResetMode.AutoReset, instanceName + ".Show");
+        if (!isFirst)
+        {
+            if (!args.Contains("--startup", StringComparer.Ordinal)) showEvent.Set();
+            return 0;
+        }
+        // Hold the historical mutex too: an old AgentMeter cannot start polling alongside Llumi.
+        using var legacy = new Mutex(true, "Local\\AgentMeter.V0.1." + Environment.UserName, out var legacyFirst);
+        if (!legacyFirst) { singleton.ReleaseMutex(); return 0; }
+        if (!PackagedEnvironment.HasIdentity)
+            LegacyPreferences.Migrate(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AgentMeter"), PackagedEnvironment.DataDirectory);
         var log = new DiagnosticLog(Path.Combine(PackagedEnvironment.DataDirectory, "logs"));
         if (args.Length == 2 && args[0] == "--probe")
         {
@@ -30,14 +43,6 @@ internal static class Program
             return coordinator.States.Any(s => s.Status == ProviderStatus.Ready) ? 0 : 1;
         }
 
-        ApplicationConfiguration.Initialize();
-        using var singleton = new Mutex(true, instanceName, out var isFirst);
-        using var showEvent = new EventWaitHandle(false, EventResetMode.AutoReset, instanceName + ".Show");
-        if (!isFirst)
-        {
-            if (!args.Contains("--startup", StringComparer.Ordinal)) showEvent.Set();
-            return 0;
-        }
         using var quitEvent = new EventWaitHandle(false, EventResetMode.AutoReset, instanceName + ".Quit");
         try
         {
@@ -49,7 +54,7 @@ internal static class Program
             log.Write("application.exited");
             return 0;
         }
-        finally { singleton.ReleaseMutex(); }
+        finally { legacy.ReleaseMutex(); singleton.ReleaseMutex(); }
     }
 
     private static IUsageProvider[] CreateProviders(Action<string> log) => [new CodexProvider(), new ClaudeProvider(log)];

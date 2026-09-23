@@ -2,11 +2,22 @@ import SwiftUI
 
 struct MeterMark: View {
   var body: some View {
-    HStack(alignment: .bottom, spacing: 3) {
-      ForEach(0..<3) { i in
-        RoundedRectangle(cornerRadius: 1.5).frame(width: 4, height: CGFloat(8 + i * 6))
-      }
-    }.frame(width: 20, height: 22).accessibilityHidden(true)
+    Canvas { context, size in
+      var arc = Path()
+      arc.move(to: CGPoint(x: size.width * 0.12, y: size.height * 0.72))
+      arc.addCurve(to: CGPoint(x: size.width * 0.88, y: size.height * 0.72),
+        control1: CGPoint(x: size.width * 0.12, y: size.height * 0.1),
+        control2: CGPoint(x: size.width * 0.88, y: size.height * 0.1))
+      context.stroke(arc, with: .foreground, style: StrokeStyle(lineWidth: 2.5, lineCap: .round))
+      var needle = Path()
+      needle.move(to: CGPoint(x: size.width * 0.47, y: size.height * 0.64))
+      needle.addLine(to: CGPoint(x: size.width * 0.75, y: size.height * 0.35))
+      needle.addLine(to: CGPoint(x: size.width * 0.55, y: size.height * 0.75))
+      needle.closeSubpath()
+      context.fill(needle, with: .foreground)
+      context.fill(Path(ellipseIn: CGRect(x: size.width * 0.43, y: size.height * 0.63,
+        width: size.width * 0.16, height: size.height * 0.16)), with: .foreground)
+    }.frame(width: 22, height: 22).accessibilityHidden(true)
   }
 }
 // Bundled vector development marks. No network images or embedded provider app assets.

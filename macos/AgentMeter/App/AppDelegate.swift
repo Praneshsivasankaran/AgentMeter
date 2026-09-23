@@ -84,10 +84,10 @@ import SwiftUI
   func applicationDidBecomeActive(_ notification: Notification) { model.loginItem.synchronize() }
   private func createApplicationMenu() {
     let main = NSMenu()
-    let appItem = NSMenuItem(title: "AgentMeter", action: nil, keyEquivalent: "")
-    let appMenu = NSMenu(title: "AgentMeter")
+    let appItem = NSMenuItem(title: "Llumi", action: nil, keyEquivalent: "")
+    let appMenu = NSMenu(title: "Llumi")
     for (title, action, key) in [
-      ("Settings…", #selector(openSettings), ","), ("Quit AgentMeter", #selector(quit), "q"),
+      ("Settings…", #selector(openSettings), ","), ("Quit Llumi", #selector(quit), "q"),
     ] {
       let item = NSMenuItem(title: title, action: action, keyEquivalent: key)
       item.target = self
@@ -97,7 +97,7 @@ import SwiftUI
     main.addItem(appItem)
     let windowItem = NSMenuItem(title: "Window", action: nil, keyEquivalent: "")
     let windowMenu = NSMenu(title: "Window")
-    let open = NSMenuItem(title: "Open AgentMeter", action: #selector(openMain), keyEquivalent: "0")
+    let open = NSMenuItem(title: "Open Llumi", action: #selector(openMain), keyEquivalent: "0")
     open.target = self
     windowMenu.addItem(open)
     windowMenu.addItem(
@@ -109,7 +109,7 @@ import SwiftUI
     main.addItem(windowItem)
     let helpItem = NSMenuItem(title: "Help", action: nil, keyEquivalent: "")
     let helpMenu = NSMenu(title: "Help")
-    let setupItem = NSMenuItem(title: "Setup AgentMeter…", action: #selector(openSetup), keyEquivalent: "")
+    let setupItem = NSMenuItem(title: "Setup Llumi…", action: #selector(openSetup), keyEquivalent: "")
     setupItem.target = self
     helpMenu.addItem(setupItem)
     let checkItem = NSMenuItem(title: "Check Setup…", action: #selector(openCheckSetup), keyEquivalent: "")
@@ -125,20 +125,29 @@ import SwiftUI
     guard status == nil else { return }
     status = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
     let image = NSImage(size: NSSize(width: 18, height: 18), flipped: false) { _ in
+      NSColor.black.setStroke()
       NSColor.black.setFill()
-      for (x, h) in [(2, 6), (7, 10), (12, 14)] {
-        NSBezierPath(
-          roundedRect: NSRect(x: x, y: 2, width: 3, height: h), xRadius: 0.5, yRadius: 0.5
-        ).fill()
-      }
+      let arc = NSBezierPath()
+      arc.move(to: NSPoint(x: 2, y: 5))
+      arc.curve(to: NSPoint(x: 16, y: 5), controlPoint1: NSPoint(x: 2, y: 16), controlPoint2: NSPoint(x: 16, y: 16))
+      arc.lineWidth = 2.2
+      arc.lineCapStyle = .round
+      arc.stroke()
+      let needle = NSBezierPath()
+      needle.move(to: NSPoint(x: 8, y: 6))
+      needle.line(to: NSPoint(x: 13.5, y: 12))
+      needle.line(to: NSPoint(x: 10, y: 4.5))
+      needle.close()
+      needle.fill()
+      NSBezierPath(ovalIn: NSRect(x: 7.5, y: 4, width: 3.5, height: 3.5)).fill()
       return true
     }
     image.isTemplate = true
     status.button?.image = image
-    status.button?.toolTip = "AgentMeter"
+    status.button?.toolTip = "Llumi"
     let menu = NSMenu()
     for (title, selector, key) in [
-      ("Open AgentMeter", #selector(openMain), ""), ("Refresh", #selector(manualRefresh), "r"),
+      ("Open Llumi", #selector(openMain), ""), ("Refresh", #selector(manualRefresh), "r"),
       ("Settings…", #selector(openSettings), ","),
       ("Quit", #selector(quit), "q"),
     ] {
@@ -156,7 +165,7 @@ import SwiftUI
         contentRect: NSRect(x: 0, y: 0, width: 850, height: 560),
         styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered,
         defer: false)
-      window.title = "AgentMeter"
+      window.title = "Llumi"
       window.minSize = NSSize(width: 630, height: 470)
       window.titlebarAppearsTransparent = true
       window.isReleasedWhenClosed = false
@@ -185,7 +194,7 @@ import SwiftUI
     if setupWindow == nil {
       let w = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 580, height: 610),
         styleMask: [.titled, .closable, .miniaturizable], backing: .buffered, defer: false)
-      w.title = "Setup AgentMeter"
+      w.title = "Setup Llumi"
       w.isReleasedWhenClosed = false
       w.delegate = self
       w.contentView = NSHostingView(rootView: SetupView(model: model, flow: setup) { [weak self] in
@@ -325,7 +334,7 @@ import SwiftUI
       let url = URL(fileURLWithPath: args[i + 1]).resolvingSymlinksInPath()
       let root =
         FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
-        .appendingPathComponent("AgentMeter/Phase1Test").path + "/"
+        .appendingPathComponent("Llumi/Phase1Test").path + "/"
       guard url.path.hasPrefix(root),
         let size = try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize, size < 32768,
         let data = try? Data(contentsOf: url), let commands = try? J.parse(data).array

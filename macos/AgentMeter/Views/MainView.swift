@@ -7,7 +7,7 @@ struct MainView: View {
       VStack(alignment: .leading, spacing: 16) {
         HStack(spacing: 9) {
           MeterMark()
-          Text("AgentMeter").font(.headline)
+          Text("Llumi").font(.headline)
         }.padding(.horizontal, 15).padding(.top, 15)
         List(Destination.allCases, selection: $model.destination) { destination in
           Label(destination.title, systemImage: destination.symbol).tag(destination)
@@ -70,7 +70,7 @@ struct SettingsView: View {
             proxy.scrollTo("setup-checks", anchor: .top)
           }
       }
-      Text("AgentMeter remains available from the Dock when the menu-bar icon is hidden.").font(
+      Text("Llumi remains available from the Dock when the menu-bar icon is hidden.").font(
         .caption
       ).foregroundStyle(.secondary)
     }.padding(24).onAppear { login.synchronize() }
@@ -80,11 +80,11 @@ private struct AboutView: View {
   var body: some View {
     VStack(spacing: 16) {
       MeterMark().scaleEffect(2).frame(height: 50)
-      Text("AgentMeter").font(.title.bold())
+      Text("Llumi").font(.title.bold())
       Text(
-        "Version \(Bundle.main.object(forInfoDictionaryKey:"AgentMeterReleaseVersion") as? String ?? "1.1.1")"
+        "Version \(Bundle.main.object(forInfoDictionaryKey:"LlumiReleaseVersion") as? String ?? "1.1.1")"
       ).font(.callout).foregroundStyle(.secondary)
-      Text("AI coding allowance, quietly at a glance.").font(.callout).foregroundStyle(.secondary)
+      Text("Track your AI coding usage.").font(.callout).foregroundStyle(.secondary)
     }.frame(maxWidth: .infinity, maxHeight: .infinity)
   }
 }

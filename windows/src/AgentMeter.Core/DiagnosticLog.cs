@@ -13,9 +13,9 @@ public sealed class DiagnosticLog(string directory)
             try
             {
                 Directory.CreateDirectory(directory);
-                var path = Path.Combine(directory, "agentmeter.log");
+                var path = Path.Combine(directory, "llumi.log");
                 if (File.Exists(path) && new FileInfo(path).Length > 256 * 1024)
-                    File.Move(path, Path.Combine(directory, "agentmeter.previous.log"), true);
+                    File.Move(path, Path.Combine(directory, "llumi.previous.log"), true);
                 File.AppendAllText(path, $"{DateTimeOffset.UtcNow:O} {safeEvent}{Environment.NewLine}", Encoding.UTF8);
                 WriteFailed = false;
             }

@@ -8,7 +8,7 @@ public sealed class ProviderWorkspace : IDisposable
     public string DirectoryPath { get; }
     public ProviderWorkspace()
     {
-        var root = Path.GetFullPath(Path.Combine(Path.GetTempPath(), "AgentMeter", "ProviderWork"));
+        var root = Path.GetFullPath(Path.Combine(Path.GetTempPath(), "Llumi", "ProviderWork"));
         for (var ancestor = new DirectoryInfo(root); ancestor is not null; ancestor = ancestor.Parent)
             if (ancestor.Exists && ancestor.Attributes.HasFlag(FileAttributes.ReparsePoint))
                 throw new IOException("Provider workspace cannot use redirected directories.");

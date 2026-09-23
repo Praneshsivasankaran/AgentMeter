@@ -31,7 +31,7 @@ internal sealed class SetupForm : Form
         this.flow = flow; this.states = states; this.refresh = refresh; this.preferences = preferences;
         this.savePreferences = savePreferences; this.startup = startup; this.toggleStartup = toggleStartup;
         this.finished = finished; this.checkOnly = checkOnly;
-        Text = checkOnly ? "Check Setup" : "Setup AgentMeter"; Font = bodyFont;
+        Text = checkOnly ? "Check Setup" : "Setup Llumi"; Font = bodyFont;
         AutoScaleMode = AutoScaleMode.Dpi; ClientSize = new Size(620, 580);
         MinimumSize = new Size(560, 480); StartPosition = FormStartPosition.CenterScreen;
         Controls.Add(body); Controls.Add(navigation);
@@ -102,13 +102,13 @@ internal sealed class SetupForm : Form
         foreach (var control in body.Controls.Cast<Control>().ToArray()) control.Dispose();
         body.Controls.Clear(); statusLabels.Clear(); message.Text = "";
         back.Visible = !checkOnly && flow.Step != SetupStep.Welcome;
-        next.Text = checkOnly ? "Close" : flow.Step == SetupStep.Welcome ? "Set Up AgentMeter" : flow.Step == SetupStep.Done ? "Start AgentMeter" : "Continue";
+        next.Text = checkOnly ? "Close" : flow.Step == SetupStep.Welcome ? "Set Up Llumi" : flow.Step == SetupStep.Done ? "Start Llumi" : "Continue";
         if (checkOnly) { TextLine("Check Setup", true); Statuses(); }
         else switch (flow.Step)
         {
             case SetupStep.Welcome:
-                TextLine("AgentMeter", true); TextLine("Your AI coding allowance, at a glance.");
-                TextLine("AgentMeter monitors usage from your locally installed Codex and Claude Code tools. Use either provider, or both. Your sign-in stays with your provider."); break;
+                TextLine("Llumi", true); TextLine("Track your AI coding usage.");
+                TextLine("Llumi monitors usage from your locally installed Codex and Claude Code tools. Use either provider, or both. Your sign-in stays with your provider."); break;
             case SetupStep.Providers:
                 TextLine("Choose providers", true);
                 var codex = new CheckBox { Text = "Codex", AutoSize = true, Checked = flow.Codex };
@@ -119,7 +119,7 @@ internal sealed class SetupForm : Form
             case SetupStep.Codex: case SetupStep.Claude:
                 var isCodex = flow.Step == SetupStep.Codex;
                 TextLine(isCodex ? "Set up Codex" : "Set up Claude Code", true);
-                TextLine("Open PowerShell. Copy each command, paste it there, then press Enter. AgentMeter never executes these commands or reads Terminal contents.");
+                TextLine("Open PowerShell. Copy each command, paste it there, then press Enter. Llumi never executes these commands or reads Terminal contents.");
                 TextLine(isCodex ? "This installation method requires Node.js and npm. Skip installation if Codex is already installed. Use native Windows, not a WSL-only installation."
                     : "This is Anthropic’s native Windows installer. Skip installation if Claude Code is already installed.");
                 Command("Install", isCodex ? "npm install -g @openai/codex" : "irm https://claude.ai/install.ps1 | iex");
@@ -145,7 +145,7 @@ internal sealed class SetupForm : Form
                 appearance.SelectedIndexChanged += (_, _) => { savePreferences(preferences() with { Appearance = (Appearance)appearance.SelectedIndex }); appearance.SelectedIndex = (int)preferences().Appearance; ApplyTheme(); };
                 body.Controls.Add(compact); body.Controls.Add(tray); body.Controls.Add(launch); TextLine("Appearance"); body.Controls.Add(appearance); break;
             case SetupStep.Done:
-                TextLine("You’re all set", true); TextLine("Setup AgentMeter… remains available from the tray and app menu."); Statuses(); break;
+                TextLine("You’re all set", true); TextLine("Setup Llumi… remains available from the tray and app menu."); Statuses(); break;
         }
         body.Controls.Add(message); RefreshStatuses(); ApplyTheme(); body.ResumeLayout(true);
     }

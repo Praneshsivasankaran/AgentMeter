@@ -5,6 +5,25 @@ ROOT = pathlib.Path(__file__).resolve().parents[2]
 APP = str(pathlib.Path(sys.argv.pop(1)).resolve())
 SCRIPTS = ROOT / 'scripts/macos'
 class DistributionGuards(unittest.TestCase):
+    def test_llumi_identity_and_current_visible_copy(self):
+        info = plistlib.loads((pathlib.Path(APP)/'Contents/Info.plist').read_bytes())
+        self.assertEqual(info['CFBundleName'], 'Llumi')
+        self.assertEqual(info['CFBundleIdentifier'], 'io.github.praneshsivasankaran.llumi')
+        self.assertEqual(info['CFBundleExecutable'], 'Llumi')
+        self.assertEqual(info['CFBundleShortVersionString'], '1.1.1')
+        for folder in ('Views', 'App', 'Notch'):
+            for source in (ROOT/'macos/AgentMeter'/folder).glob('*.swift'):
+                self.assertNotIn('AgentMeter', source.read_text(), str(source))
+        self.assertIn('Track your AI coding usage.', (ROOT/'macos/AgentMeter/Views/MainView.swift').read_text())
+    def test_windows_display_product_preserves_package_task(self):
+        project = (ROOT/'windows/src/AgentMeter/AgentMeter.csproj').read_text()
+        self.assertIn('<Product>Llumi</Product>', project)
+        self.assertIn('<AssemblyName>Llumi</AssemblyName>', project)
+        task = (ROOT/'windows/src/AgentMeter/PackagedStartupRegistration.cs').read_text()
+        self.assertIn('TaskId = "AgentMeterStartup"', task)
+        for name in ('UsageForm.cs', 'MonitorForm.cs', 'SetupForm.cs', 'TrayContext.cs'):
+            for line in (ROOT/'windows/src/AgentMeter'/name).read_text().splitlines():
+                if '"' in line: self.assertNotIn('AgentMeter', line)
     def test_setup_is_copy_only_and_notch_has_no_forced_dark_scheme(self):
         setup = (ROOT/'macos/AgentMeter/Views/SetupView.swift').read_text()
         flow = (ROOT/'macos/AgentMeter/Presentation/SetupFlow.swift').read_text()
@@ -19,14 +38,14 @@ class DistributionGuards(unittest.TestCase):
     def test_production_name_without_packaging(self):
         r = self.run_script('create-dmg.sh', APP, '--print-production-name')
         self.assertEqual(r.returncode, 0, r.stderr)
-        self.assertEqual(r.stdout.splitlines()[-1], 'AgentMeter-1.1.1-macos.dmg')
+        self.assertEqual(r.stdout.splitlines()[-1], 'Llumi-1.1.1-macos.dmg')
     def test_rejects_placeholder_identity_and_incoherent_versions(self):
         for key, value in [('CFBundleIdentifier', 'local.agentmeter.mac'),
                            ('CFBundleShortVersionString', '0.1.0'),
                            ('CFBundleVersion', '2'),
-                           ('AgentMeterReleaseVersion', '0.1.0-beta.3')]:
+                           ('LlumiReleaseVersion', '0.1.0-beta.3')]:
             with self.subTest(key=key), tempfile.TemporaryDirectory() as directory:
-                app = pathlib.Path(directory) / 'AgentMeter.app'
+                app = pathlib.Path(directory) / 'Llumi.app'
                 shutil.copytree(APP, app)
                 path = app / 'Contents/Info.plist'
                 info = plistlib.loads(path.read_bytes()); info[key] = value

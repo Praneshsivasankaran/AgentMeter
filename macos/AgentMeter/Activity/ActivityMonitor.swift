@@ -3,7 +3,7 @@ import CoreGraphics
 
 // Mutable scanner state is confined to one utility queue; no UI work runs there.
 final class ProcessScanner: @unchecked Sendable {
-  private let queue = DispatchQueue(label: "AgentMeter.activity", qos: .utility)
+  private let queue = DispatchQueue(label: "Llumi.activity", qos: .utility)
   private var timer: DispatchSourceTimer?
   private var running = false
   private var installations: [ProviderID: Installation] = [:]

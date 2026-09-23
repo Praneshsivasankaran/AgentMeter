@@ -8,7 +8,7 @@ final class Diagnostics: @unchecked Sendable {
     let dir =
       directory
       ?? FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(
-        "Library/Logs/AgentMeter", isDirectory: true)
+        "Library/Logs/Llumi", isDirectory: true)
     try? FileManager.default.createDirectory(
       at: dir, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
     url = dir.appendingPathComponent("diagnostics.jsonl")

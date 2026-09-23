@@ -47,3 +47,70 @@ internal sealed class PreferenceStore(string path)
         finally { try { File.Delete(temporary); } catch (IOException) { } catch (UnauthorizedAccessException) { } }
     }
 }
+
+// Portable-only, bounded migration. Packaged LocalState remains OS-owned and unchanged.
+internal static class LegacyPreferences
+{
+    internal static void Migrate(string legacyDirectory, string currentDirectory)
+    {
+        var marker = Path.Combine(currentDirectory, "llumi-migration.json");
+        try
+        {
+            if (File.Exists(marker)) return;
+            var old = ReadObject(Path.Combine(legacyDirectory, "v2-preferences.json"));
+            var current = ReadObject(Path.Combine(currentDirectory, "v2-preferences.json"));
+            var values = new Dictionary<string, object>();
+            foreach (var key in new[] { "CompactMonitor", "TrayIcon", "Appearance" })
+            {
+                var value = Value(current, key) ?? Value(old, key);
+                if (value is not null) values[key] = value;
+            }
+            Directory.CreateDirectory(currentDirectory);
+            if (values.Count > 0) Write(Path.Combine(currentDirectory, "v2-preferences.json"), JsonSerializer.Serialize(values));
+            var completed = ReadBoolean(Path.Combine(currentDirectory, "setup-completed.json"))
+                ?? ReadBoolean(Path.Combine(legacyDirectory, "setup-completed.json"));
+            if (completed is null && values.Count > 0) completed = true;
+            if (completed is not null) Write(Path.Combine(currentDirectory, "setup-completed.json"), completed.Value ? "true" : "false");
+            Write(marker, "true");
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException or JsonException) { }
+    }
+    private static JsonElement? ReadObject(string path)
+    {
+        try
+        {
+            using var file = File.OpenRead(path);
+            if (file.Length > 4096) return null;
+            using var document = JsonDocument.Parse(file, new JsonDocumentOptions { MaxDepth = 4 });
+            if (document.RootElement.ValueKind != JsonValueKind.Object) return null;
+            var names = new HashSet<string>();
+            foreach (var entry in document.RootElement.EnumerateObject()) if (!names.Add(entry.Name)) return null;
+            return document.RootElement.Clone();
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException or JsonException) { return null; }
+    }
+    private static object? Value(JsonElement? root, string key)
+    {
+        if (root is not { } obj || !obj.TryGetProperty(key, out var value)) return null;
+        if (key == "Appearance") return value.ValueKind == JsonValueKind.Number && value.TryGetInt32(out var n)
+            && Enum.IsDefined((Appearance)n) ? n : null;
+        return value.ValueKind is JsonValueKind.True or JsonValueKind.False ? value.GetBoolean() : null;
+    }
+    private static bool? ReadBoolean(string path)
+    {
+        try
+        {
+            using var file = File.OpenRead(path);
+            if (file.Length > 32) return null;
+            using var document = JsonDocument.Parse(file);
+            return document.RootElement.ValueKind is JsonValueKind.True or JsonValueKind.False ? document.RootElement.GetBoolean() : null;
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException or JsonException) { return null; }
+    }
+    private static void Write(string path, string value)
+    {
+        var temporary = path + ".tmp";
+        try { File.WriteAllText(temporary, value); File.Move(temporary, path, true); }
+        finally { if (File.Exists(temporary)) File.Delete(temporary); }
+    }
+}

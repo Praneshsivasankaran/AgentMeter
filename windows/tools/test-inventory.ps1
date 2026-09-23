@@ -4,7 +4,7 @@ $ErrorActionPreference = 'Stop'
 $source = (Resolve-Path -LiteralPath $PackageDirectory).Path
 $root = Join-Path ([IO.Path]::GetTempPath()) ('AgentMeter-InventoryTests-' + [Guid]::NewGuid().ToString('N'))
 $null = New-Item -ItemType Directory -Path $root
-foreach ($file in @('AgentMeter.dll','AgentMeter.runtimeconfig.json','LICENSE.txt','THIRD-PARTY-NOTICES.txt')) { Copy-Item -LiteralPath (Join-Path $source $file) -Destination $root }
+foreach ($file in @('Llumi.dll','Llumi.runtimeconfig.json','LICENSE.txt','THIRD-PARTY-NOTICES.txt')) { Copy-Item -LiteralPath (Join-Path $source $file) -Destination $root }
 foreach ($projection in @('Microsoft.Windows.SDK.NET.dll','WinRT.Runtime.dll')) { if (Test-Path (Join-Path $source $projection)) { Copy-Item -LiteralPath (Join-Path $source $projection) -Destination $root } }
 if (Test-Path -LiteralPath (Join-Path $source 'licenses')) { Copy-Item -LiteralPath (Join-Path $source 'licenses') -Destination $root -Recurse }
 & "$PSScriptRoot/write-inventory.ps1" -Directory $root

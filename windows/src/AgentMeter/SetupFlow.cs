@@ -76,7 +76,7 @@ internal static class SetupDiagnostics
         value.Split('.').All(p => p.Length > 0 && p.All(c => c is >= '0' and <= '9')) ? value : "unknown";
     internal static string Report(IReadOnlyList<ProviderState> states, string? version, string? build)
     {
-        var lines = new List<string> { "AgentMeter diagnostics schema: 1", $"App version: {Numeric(version)}",
+        var lines = new List<string> { "Llumi diagnostics schema: 1", $"App version: {Numeric(version)}",
             $"App build: {Numeric(build)}", $"OS: Windows {Environment.OSVersion.Version}",
             $"Architecture: {System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant()}" };
         foreach (var provider in new[] { "Codex", "Claude" })

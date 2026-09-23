@@ -6,7 +6,7 @@ $ErrorActionPreference = 'Stop'
 function Assert-RuntimeNotices {
     param([string]$Directory)
     if (-not (Test-Path -LiteralPath (Join-Path $Directory 'coreclr.dll') -PathType Leaf)) { return }
-    $runtimeConfig = Get-Content -LiteralPath (Join-Path $Directory 'AgentMeter.runtimeconfig.json') -Raw | ConvertFrom-Json
+    $runtimeConfig = Get-Content -LiteralPath (Join-Path $Directory 'Llumi.runtimeconfig.json') -Raw | ConvertFrom-Json
     $frameworks = @($runtimeConfig.runtimeOptions.includedFrameworks)
     if ($frameworks.Count -eq 0 -or 'Microsoft.NETCore.App' -notin $frameworks.name) {
         throw 'Bundled runtime framework metadata is missing.'
@@ -32,7 +32,7 @@ if (@(Get-ChildItem -LiteralPath $Directory -Filter '*.pdb' -File -Recurse).Coun
     throw 'A release unexpectedly contains debug symbols.'
 }
 $binaries = @(Get-ChildItem -LiteralPath $Directory -File | Where-Object {
-    $_.Name -like 'AgentMeter*' -and $_.Extension -in @('.dll', '.exe')
+    ($_.Name -like 'Llumi*' -or $_.Name -like 'AgentMeter.Core*') -and $_.Extension -in @('.dll', '.exe')
 })
 if ($binaries.Count -lt 3) { throw 'Expected AgentMeter release binaries were not found.' }
 foreach ($binary in $binaries) {

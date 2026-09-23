@@ -15,7 +15,7 @@ internal sealed class TrayContext : ApplicationContext
     private readonly IStartupRegistration startup;
     private readonly NotifyIcon tray;
     private readonly Icon icon = AppIcon.Load();
-    private Icon trayIcon = AppIcon.Load(SystemInformation.SmallIconSize.Width);
+    private Icon trayIcon = AppIcon.LoadTray(SystemInformation.SmallIconSize.Width);
     private readonly ContextMenuStrip menu = new();
     private readonly ToolStripMenuItem pinMenu;
     private readonly ToolStripMenuItem startupMenu = new("Start with Windows");
@@ -60,11 +60,11 @@ internal sealed class TrayContext : ApplicationContext
         var names = coordinator.States.Select(s => s.Name).ToArray();
         popup = new UsageForm(names, icon);
         monitor = new MonitorForm(names, icon);
-        tray = new NotifyIcon { Icon = trayIcon, Text = "AgentMeter — loading", ContextMenuStrip = menu, Visible = true };
-        menu.Items.Add("Open AgentMeter", null, (_, _) => ShowPopup());
+        tray = new NotifyIcon { Icon = trayIcon, Text = "Llumi — loading", ContextMenuStrip = menu, Visible = true };
+        menu.Items.Add("Open Llumi", null, (_, _) => ShowPopup());
         pinMenu = new ToolStripMenuItem("Pin Monitor", null, (_, _) => { if (monitor.Visible) UnpinMonitor(); else OpenMonitor(); });
         menu.Items.Add("Refresh", null, (_, _) => StartRefresh());
-        menu.Items.Add("Setup AgentMeter…", null, (_, _) => OpenSetup());
+        menu.Items.Add("Setup Llumi…", null, (_, _) => OpenSetup());
         menu.Items.Add("Check Setup…", null, (_, _) => OpenCheckSetup());
         menu.Items.Add("Settings", null, (_, _) => { ShowPopup(); popup.ShowSettings(); });
         startupMenu.Click += (_, _) => ToggleStartup();
@@ -232,7 +232,7 @@ internal sealed class TrayContext : ApplicationContext
 
     private void OnDisplaySettingsChanged(object? sender, EventArgs e) => OnUi(() =>
     {
-        var replacement = AppIcon.Load(SystemInformation.SmallIconSize.Width);
+        var replacement = AppIcon.LoadTray(SystemInformation.SmallIconSize.Width);
         tray.Icon = replacement;
         trayIcon.Dispose(); trayIcon = replacement;
         if (monitor.Visible) { monitor.KeepOnScreen(); SavePosition(); }

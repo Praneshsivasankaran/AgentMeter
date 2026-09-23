@@ -611,7 +611,7 @@
 			<key>lastKnownFileType</key>
 			<string>image.icns</string>
 			<key>path</key>
-			<string>AgentMeter/Resources/AgentMeter.icns</string>
+			<string>AgentMeter/Resources/Llumi.icns</string>
 			<key>sourceTree</key>
 			<string>&lt;group&gt;</string>
 		</dict>
@@ -665,7 +665,7 @@
 			<key>explicitFileType</key>
 			<string>wrapper.application</string>
 			<key>path</key>
-			<string>AgentMeter.app</string>
+			<string>Llumi.app</string>
 			<key>sourceTree</key>
 			<string>BUILT_PRODUCTS_DIR</string>
 		</dict>
@@ -838,7 +838,7 @@
 			<key>buildSettings</key>
 			<dict>
 				<key>PRODUCT_NAME</key>
-				<string>$(TARGET_NAME)</string>
+				<string>Llumi</string>
 				<key>SWIFT_OBJC_BRIDGING_HEADER</key>
 				<string>AgentMeter/Activity/native.h</string>
 				<key>LD_RUNPATH_SEARCH_PATHS</key>
@@ -852,7 +852,7 @@
 				<key>CURRENT_PROJECT_VERSION</key>
 				<string>1</string>
 				<key>PRODUCT_BUNDLE_IDENTIFIER</key>
-				<string>io.github.praneshsivasankaran.agentmeter</string>
+				<string>io.github.praneshsivasankaran.llumi</string>
 				<key>INFOPLIST_FILE</key>
 				<string>AgentMeter/Info.plist</string>
 				<key>SWIFT_OPTIMIZATION_LEVEL</key>
@@ -874,7 +874,7 @@
 			<key>buildSettings</key>
 			<dict>
 				<key>PRODUCT_NAME</key>
-				<string>$(TARGET_NAME)</string>
+				<string>Llumi</string>
 				<key>SWIFT_OBJC_BRIDGING_HEADER</key>
 				<string>AgentMeter/Activity/native.h</string>
 				<key>LD_RUNPATH_SEARCH_PATHS</key>
@@ -888,7 +888,7 @@
 				<key>CURRENT_PROJECT_VERSION</key>
 				<string>1</string>
 				<key>PRODUCT_BUNDLE_IDENTIFIER</key>
-				<string>io.github.praneshsivasankaran.agentmeter</string>
+				<string>io.github.praneshsivasankaran.llumi</string>
 				<key>INFOPLIST_FILE</key>
 				<string>AgentMeter/Info.plist</string>
 				<key>SWIFT_OPTIMIZATION_LEVEL</key>

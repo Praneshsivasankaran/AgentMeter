@@ -9,7 +9,7 @@ struct SetupView: View {
     VStack(alignment: .leading, spacing: 22) {
       HStack(spacing: 10) {
         MeterMark()
-        Text("AgentMeter").font(.headline)
+        Text("Llumi").font(.headline)
         Spacer()
         Text("Setup").foregroundStyle(.secondary)
       }
@@ -34,8 +34,8 @@ struct SetupView: View {
       .background(Color(nsColor: .windowBackgroundColor))
   }
   private var nextTitle: String {
-    if flow.step == .welcome { return "Set Up AgentMeter" }
-    if flow.step == .done { return "Start AgentMeter" }
+    if flow.step == .welcome { return "Set Up Llumi" }
+    if flow.step == .done { return "Start Llumi" }
     if flow.step == .verify && !flow.selected.contains(where: { status($0) == .ready }) {
       return "Finish Anyway"
     }
@@ -47,8 +47,8 @@ struct SetupView: View {
   @ViewBuilder private var content: some View {
     switch flow.step {
     case .welcome:
-      Text("Your AI coding allowance, at a glance.").font(.largeTitle.bold())
-      Text("AgentMeter monitors usage from your locally installed Codex and Claude Code tools.")
+      Text("Track your AI coding usage.").font(.largeTitle.bold())
+      Text("Llumi monitors usage from your locally installed Codex and Claude Code tools.")
       Text("Use Codex, Claude Code, or both. You only need the provider you use.").foregroundStyle(.secondary)
       Label("Your sign-in stays with your provider.", systemImage: "lock")
     case .providers:
@@ -78,7 +78,7 @@ struct SetupView: View {
       SettingsView(preferences: model.preferences, login: model.loginItem)
         .frame(height: 365)
     case .done:
-      heading("You’re all set", "AgentMeter will keep your allowance up to date. Setup is always available from the Help menu.")
+      heading("You’re all set", "Llumi will keep your allowance up to date. Setup is always available from the Help menu.")
       statuses
       Text("The notch appears when you use a supported coding-agent session. Close the main window to keep monitoring in the background.")
         .foregroundStyle(.secondary)
@@ -112,7 +112,7 @@ struct SetupView: View {
   private func providerInstructions(_ provider: ProviderID) -> some View {
     VStack(alignment: .leading, spacing: 16) {
       heading(provider == .codex ? "Set up Codex" : "Set up Claude Code",
-        "AgentMeter uses the locally installed command-line tool and its existing authentication. Your credentials stay with the provider.")
+        "Llumi uses the locally installed command-line tool and its existing authentication. Your credentials stay with the provider.")
       Text(status(provider).rawValue).font(.callout.weight(.medium))
       Text("Open Terminal from Applications → Utilities. Copy each command, paste it into Terminal, then press Return.")
         .font(.callout).foregroundStyle(.secondary)
@@ -132,7 +132,7 @@ struct SetupView: View {
         Spacer()
         Link("Official setup guide ↗", destination: ProviderSetup.documentation(provider))
       }
-      Text("AgentMeter never runs these commands for you. After signing in, choose Check Again. No prompts or coding tasks are needed.")
+      Text("Llumi never runs these commands for you. After signing in, choose Check Again. No prompts or coding tasks are needed.")
         .font(.caption).foregroundStyle(.secondary)
     }
   }

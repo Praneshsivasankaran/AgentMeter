@@ -55,15 +55,13 @@ internal static class GlyphDrawing
     {
         var saved = graphics.Save();
         graphics.SmoothingMode = SmoothingMode.AntiAlias;
+        graphics.TranslateTransform(bounds.X, bounds.Y);
+        graphics.ScaleTransform(bounds.Width / 24f, bounds.Height / 24f);
+        using var pen = new Pen(Palette.Foreground, 2.6f) { StartCap = LineCap.Round, EndCap = LineCap.Round };
+        graphics.DrawArc(pen, 3, 5, 18, 18, 180, 180);
         using var fill = new SolidBrush(Palette.Foreground);
-        var gap = bounds.Width / 8f;
-        var barWidth = (bounds.Width - gap * 2) / 3f;
-        for (var i = 0; i < 3; i++)
-        {
-            var height = bounds.Height * (0.4f + i * 0.3f);
-            using var bar = DrawingHelpers.RoundedRectangle(new(bounds.X + i * (barWidth + gap), bounds.Bottom - height, barWidth, height), barWidth / 3f);
-            graphics.FillPath(fill, bar);
-        }
+        graphics.FillPolygon(fill, [new(10, 15), new(18, 8), new(14, 18)]);
+        graphics.FillEllipse(fill, 10, 14, 4, 4);
         graphics.Restore(saved);
     }
 }

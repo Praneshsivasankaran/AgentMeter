@@ -1,6 +1,6 @@
-# AgentMeter product specification
+# Llumi product specification
 
-AgentMeter is one product with native macOS and Windows implementations. This specification is the starting point for product changes and reviews, not a claim that every implementation has passed every acceptance scenario.
+Llumi is one product with native macOS and Windows implementations. This specification is the starting point for product changes and reviews, not a claim that every implementation has passed every acceptance scenario.
 
 Before changing behavior:
 

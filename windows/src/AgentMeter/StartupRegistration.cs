@@ -15,7 +15,7 @@ internal sealed class StartupRegistration(string executable, Action<string>? log
     string keyPath = StartupRegistration.RunKey) : IStartupRegistration
 {
     internal const string RunKey = @"Software\Microsoft\Windows\CurrentVersion\Run";
-    internal const string ValueName = "AgentMeter";
+    internal const string ValueName = "Llumi";
 
     internal static string Command(string executable)
     {

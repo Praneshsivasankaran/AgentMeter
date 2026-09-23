@@ -124,7 +124,7 @@ final class TrackingSurface: NSView {
       ProviderGlance(snapshot: model.usage[$0] ?? UsageSnapshot(provider: $0))
     }
     surface.setAccessibilityLabel(
-      presentation.rows.map(\.accessibility).joined(separator: ", ") + ". Open AgentMeter")
+      presentation.rows.map(\.accessibility).joined(separator: ", ") + ". Open Llumi")
     if old != presentation.state {
       transition(immediate: !model.preferences.notchEnabled)
     } else if presentation.state.phase != .hidden {

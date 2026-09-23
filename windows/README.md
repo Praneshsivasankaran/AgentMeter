@@ -1,6 +1,6 @@
-# AgentMeter for Windows
+# Llumi for Windows
 
-Native Windows Forms implementation of AgentMeter, using .NET 10.
+Native Windows Forms implementation of Llumi, using .NET 10.
 
 **Status:** Microsoft Store submission candidate; Store publication pending. A GitHub direct download is coming soon and requires its own distribution review.
 

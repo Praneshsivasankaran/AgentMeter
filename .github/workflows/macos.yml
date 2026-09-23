@@ -24,6 +24,6 @@ jobs:
       - name: Synthetic tests
         run: xcodebuild -project macos/AgentMeter.xcodeproj -scheme AgentMeter -configuration Debug -derivedDataPath "$HOME/Library/Developer/Xcode/DerivedData/AgentMeter" -destination 'platform=macOS' test
       - name: Privacy audit
-        run: python3 macos/Scripts/privacy-check.py "$HOME/Library/Developer/Xcode/DerivedData/AgentMeter/Build/Products/Release/AgentMeter.app"
+        run: python3 macos/Scripts/privacy-check.py "$HOME/Library/Developer/Xcode/DerivedData/AgentMeter/Build/Products/Release/Llumi.app"
       - name: Distribution guard tests (no signing or submission)
-        run: python3 scripts/macos/test-pipeline.py "$HOME/Library/Developer/Xcode/DerivedData/AgentMeter/Build/Products/Release/AgentMeter.app"
+        run: python3 scripts/macos/test-pipeline.py "$HOME/Library/Developer/Xcode/DerivedData/AgentMeter/Build/Products/Release/Llumi.app"

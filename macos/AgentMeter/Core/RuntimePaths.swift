@@ -4,12 +4,23 @@ import Foundation
 // Persistent empty inode, not a PID file. Never unlink: that would split the lock
 // across inodes. O_CLOEXEC prevents provider children from retaining ownership.
 final class InstanceLease {
-  static let identifier = "io.github.praneshsivasankaran.agentmeter"
+  static let identifier = "io.github.praneshsivasankaran.llumi"
+  static let legacyIdentifier = "io.github.praneshsivasankaran.agentmeter"
   static let reopen = Notification.Name(identifier + ".reopen")
   private let descriptor: Int32
   private init(_ descriptor: Int32) { self.descriptor = descriptor }
   deinit { close(descriptor) }
   enum LeaseError: Error { case unsafeLocation, unavailable }
+  static func acquireProductLeases(root: URL? = nil) throws -> [InstanceLease]? {
+    let root = root ?? FileManager.default.homeDirectoryForCurrentUser
+      .appendingPathComponent("Library/Application Support", isDirectory: true)
+    var leases: [InstanceLease] = []
+    for id in [identifier, legacyIdentifier] {
+      guard let lease = try acquire(directory: root.appendingPathComponent(id, isDirectory: true)) else { return nil }
+      leases.append(lease)
+    }
+    return leases
+  }
   static func acquire(directory: URL? = nil) throws -> InstanceLease? {
     let directory = directory ?? FileManager.default.homeDirectoryForCurrentUser
       .appendingPathComponent("Library/Application Support/" + identifier, isDirectory: true)
@@ -44,7 +55,7 @@ enum RuntimePaths {
   // directory plus a Git ceiling prevents provider startup traversing it.
   static var providerWork: URL {
     FileManager.default.temporaryDirectory.appendingPathComponent(
-      "AgentMeter/ProviderWork", isDirectory: true
+      "Llumi/ProviderWork", isDirectory: true
     ).resolvingSymlinksInPath()
   }
   static func canonicalDirectory(_ url: URL) -> URL {

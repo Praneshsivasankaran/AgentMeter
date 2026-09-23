@@ -1,10 +1,14 @@
-# AgentMeter
+# Llumi
 
-AgentMeter monitors Codex and Claude Code usage on **macOS and Windows**, with a native usage window and a compact monitor that appears when supported sessions are active.
+Track your AI coding usage.
+
+This branch prepares the AgentMeter → Llumi migration. No Llumi release is available yet; linked beta releases and the screenshots/demo below are historical AgentMeter artifacts. Existing repository and support URLs remain unchanged pending a coordinated migration.
+
+Llumi monitors Codex and Claude Code usage on **macOS and Windows**, with a native usage window and a compact monitor that appears when supported sessions are active.
 
 [Website](https://praneshsivasankaran.github.io/AgentMeter/) · [Privacy](https://praneshsivasankaran.github.io/AgentMeter/privacy/) · [Support](https://praneshsivasankaran.github.io/AgentMeter/support/)
 
-## Download AgentMeter
+## Existing AgentMeter downloads (historical)
 
 | | macOS | Windows |
 | --- | --- | --- |
@@ -15,7 +19,7 @@ AgentMeter monitors Codex and Claude Code usage on **macOS and Windows**, with a
 
 The macOS beta requires macOS 14 or later and is currently unsigned. Read the [installation notes](docs/macos/INSTALL.md); do not disable Gatekeeper. Windows source targets Windows 10 version 2004 or later, x64. Neither Store release is live yet.
 
-GitHub is AgentMeter's official product, source and direct-download home. Direct builds for both platforms are planned; [distribution requirements](docs/DISTRIBUTION.md) apply independently to each channel.
+GitHub is Llumi's official product, source and direct-download home. Direct builds for both platforms are planned; [distribution requirements](docs/DISTRIBUTION.md) apply independently to each channel.
 
 ## See it in action
 
@@ -44,11 +48,11 @@ GitHub is AgentMeter's official product, source and direct-download home. Direct
 - Expands on hover, opens Usage on click, and provides native menu-bar or tray controls.
 - Supports optional launch at login/startup and System, Light and Dark appearance.
 
-AgentMeter refreshes every 30 seconds through your separately installed, authenticated Codex CLI and standalone Claude Code. Desktop apps can trigger the monitor; allowance comes from those CLI tools. Use the same subscription account across clients. Provider interfaces can change, and unavailable values are never estimated.
+Llumi refreshes every 30 seconds through your separately installed, authenticated Codex CLI and standalone Claude Code. Desktop apps can trigger the monitor; allowance comes from those CLI tools. Use the same subscription account across clients. Provider interfaces can change, and unavailable values are never estimated.
 
 ## Privacy
 
-No AgentMeter account, telemetry, analytics or backend. AgentMeter does not read prompts, responses, source code, terminal contents or keystrokes, and does not copy provider credentials. Usage checks send no model prompts. Provider tools retain their own authentication and contact their own services. [Privacy policy](PRIVACY.md).
+No Llumi account, telemetry, analytics or backend. Llumi does not read prompts, responses, source code, terminal contents or keystrokes, and does not copy provider credentials. Usage checks send no model prompts. Provider tools retain their own authentication and contact their own services. [Privacy policy](PRIVACY.md).
 
 ## Source and contributions
 
@@ -58,4 +62,4 @@ Product behavior is specified together and implemented natively on each platform
 
 [Report an issue](https://github.com/Praneshsivasankaran/AgentMeter/issues/new/choose) · [Contribute](CONTRIBUTING.md) · [Report a security concern](SECURITY.md)
 
-AgentMeter's original source is [MIT licensed](LICENSE). [Third-party materials and trademarks retain their own terms](THIRD-PARTY-NOTICES.md). AgentMeter is independent of OpenAI and Anthropic.
+Llumi's original source is [MIT licensed](LICENSE). [Third-party materials and trademarks retain their own terms](THIRD-PARTY-NOTICES.md). Llumi is independent of OpenAI and Anthropic.

@@ -58,14 +58,14 @@ internal sealed class MonitorForm : Form
     internal MonitorForm(IEnumerable<string> names, Icon icon)
     {
         providerNames = names.Distinct().ToArray();
-        Text = "AgentMeter monitor"; Icon = icon;
-        AccessibleName = "AgentMeter compact monitor";
-        AccessibleDescription = "Remaining Codex and Claude Code allowance. Hover for details. Click or Enter opens AgentMeter. Drag to move.";
+        Text = "Llumi monitor"; Icon = icon;
+        AccessibleName = "Llumi compact monitor";
+        AccessibleDescription = "Remaining Codex and Claude Code allowance. Hover for details. Click or Enter opens Llumi. Drag to move.";
         FormBorderStyle = FormBorderStyle.None; ShowInTaskbar = false;
         StartPosition = FormStartPosition.Manual; AutoScaleMode = AutoScaleMode.None;
         BackColor = Palette.Background; ForeColor = Palette.Foreground;
         SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer, true);
-        menu.Items.Add("Open AgentMeter", null, (_, _) => OpenRequested?.Invoke());
+        menu.Items.Add("Open Llumi", null, (_, _) => OpenRequested?.Invoke());
         menu.Items.Add("Refresh", null, (_, _) => RefreshRequested?.Invoke());
         menu.Items.Add("Hide monitor", null, (_, _) => UnpinRequested?.Invoke());
         menu.Items.Add("Quit", null, (_, _) => ExitRequested?.Invoke());

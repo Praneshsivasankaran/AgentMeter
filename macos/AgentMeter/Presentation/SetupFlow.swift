@@ -126,7 +126,7 @@ enum SetupDiagnostics {
     #else
     let architecture = "other"
     #endif
-    var lines = ["AgentMeter diagnostics schema: 1", "App version: \(numeric(version))",
+    var lines = ["Llumi diagnostics schema: 1", "App version: \(numeric(version))",
       "App build: \(numeric(build))", "OS: macOS \(os.majorVersion).\(os.minorVersion).\(os.patchVersion)",
       "Architecture: \(architecture)"]
     for provider in ProviderID.allCases {

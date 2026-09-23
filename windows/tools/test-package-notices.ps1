@@ -55,7 +55,7 @@ try {
     $passed++
     [IO.File]::WriteAllText((Join-Path $destination 'coreclr.dll'), 'Runtime marker fixture')
     @{ runtimeOptions = @{ includedFrameworks = $frameworks } } | ConvertTo-Json -Depth 5 |
-        Set-Content -LiteralPath (Join-Path $destination 'AgentMeter.runtimeconfig.json')
+        Set-Content -LiteralPath (Join-Path $destination 'Llumi.runtimeconfig.json')
     Assert-RuntimeNotices -Directory $destination
     $passed++
 

@@ -1,4 +1,4 @@
-# Build AgentMeter for Windows
+# Build Llumi for Windows
 
 Requirements: Windows 10 version 2004 or later (x64), the .NET 10 SDK and PowerShell 7. No Node runtime, provider SDK, provider account or signing certificate is required to build and run the synthetic tests.
 
@@ -16,7 +16,7 @@ To launch your local build:
 & ./windows/artifacts/release/AgentMeter.exe
 ```
 
-The .NET 10 Desktop Runtime (x64) must be installed to run this framework-dependent output; the SDK includes it. Real usage also requires separately installed and authenticated Codex CLI and standalone Claude Code. Sign in using those tools. AgentMeter does not install providers or accept API keys.
+The .NET 10 Desktop Runtime (x64) must be installed to run this framework-dependent output; the SDK includes it. Real usage also requires separately installed and authenticated Codex CLI and standalone Claude Code. Sign in using those tools. Llumi does not install providers or accept API keys.
 
 For individual development steps:
 

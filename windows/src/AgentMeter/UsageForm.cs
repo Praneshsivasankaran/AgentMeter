@@ -6,12 +6,12 @@ namespace AgentMeter;
 internal sealed class UsageForm : Form
 {
     private readonly Panel header = new();
-    private readonly Label title = new() { Text = "AgentMeter", AutoSize = false };
+    private readonly Label title = new() { Text = "Llumi", AutoSize = false };
     private readonly Label footer = new() { AutoEllipsis = true };
     private readonly Button usageTab = Palette.Button("Usage", "Usage");
     private readonly Button settingsTab = Palette.Button("Settings", "Settings");
     private readonly GlyphButton refresh = new(Glyph.Refresh, "Refresh usage", "Refresh");
-    private readonly GlyphButton menu = new(Glyph.Menu, "AgentMeter menu");
+    private readonly GlyphButton menu = new(Glyph.Menu, "Llumi menu");
     private readonly Panel content = new() { AutoScroll = true };
     private readonly Panel settings = new() { Name = "settings", AutoScroll = true };
     private readonly CheckBox launch = new() { Text = "Launch at Startup", AutoSize = true };
@@ -40,7 +40,7 @@ internal sealed class UsageForm : Form
 
     public UsageForm(IEnumerable<string> names, Icon icon)
     {
-        Text = "AgentMeter"; Icon = icon; Font = bodyFont;
+        Text = "Llumi"; Icon = icon; Font = bodyFont;
         FormBorderStyle = FormBorderStyle.Sizable; ShowInTaskbar = true;
         StartPosition = FormStartPosition.Manual; AutoScaleMode = AutoScaleMode.None;
         DoubleBuffered = true;
@@ -54,13 +54,13 @@ internal sealed class UsageForm : Form
         launch.Location = new(S(20), S(24)); compact.Location = new(S(20), S(68)); tray.Location = new(S(20), S(112));
         appearanceLabel.Location = new(S(20), S(164)); appearance.SetBounds(S(20), S(194), S(200), S(30));
         settingsMessage.SetBounds(S(20), S(244), S(410), S(100));
-        settingsMessage.Text = "AgentMeter stays available from the taskbar when the tray icon is hidden.\n\nIndependent of OpenAI and Anthropic. No AgentMeter account or telemetry.";
+        settingsMessage.Text = "Llumi stays available from the taskbar when the tray icon is hidden.\n\nIndependent of OpenAI and Anthropic. No Llumi account or telemetry.";
         usageTab.Click += (_, _) => ShowUsage(); settingsTab.Click += (_, _) => ShowSettings();
         refresh.Click += (_, _) => RefreshRequested?.Invoke();
-        actions.Items.Add("Open AgentMeter", null, (_, _) => ShowUsage());
+        actions.Items.Add("Open Llumi", null, (_, _) => ShowUsage());
         actions.Items.Add("Refresh", null, (_, _) => RefreshRequested?.Invoke());
         actions.Items.Add("Settings", null, (_, _) => ShowSettings());
-        actions.Items.Add("Setup AgentMeter…", null, (_, _) => SetupRequested?.Invoke());
+        actions.Items.Add("Setup Llumi…", null, (_, _) => SetupRequested?.Invoke());
         actions.Items.Add("Check Setup…", null, (_, _) => CheckSetupRequested?.Invoke());
         actions.Items.Add("Quit", null, (_, _) => ExitRequested?.Invoke());
         menu.Click += (_, _) => { MenuOpening?.Invoke(); actions.Show(menu, new Point(0, menu.Height)); };

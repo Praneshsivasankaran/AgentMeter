@@ -3,13 +3,13 @@
 param([Parameter(Mandatory=$true)][string]$Directory)
 $ErrorActionPreference = 'Stop'
 $root = (Resolve-Path -LiteralPath $Directory).Path
-$config = Get-Content -LiteralPath (Join-Path $root 'AgentMeter.runtimeconfig.json') -Raw | ConvertFrom-Json
-$version = [Diagnostics.FileVersionInfo]::GetVersionInfo((Join-Path $root 'AgentMeter.dll')).ProductVersion
+$config = Get-Content -LiteralPath (Join-Path $root 'Llumi.runtimeconfig.json') -Raw | ConvertFrom-Json
+$version = [Diagnostics.FileVersionInfo]::GetVersionInfo((Join-Path $root 'Llumi.dll')).ProductVersion
 $components = @()
 function Component($name, $version, $origin, $bundled, $license, $notices) {
     [ordered]@{component=$name;version=$version;origin=$origin;bundled=$bundled;license=$license;requiredNotice=@($notices);noticePresent=(@($notices | Where-Object { -not (Test-Path -LiteralPath (Join-Path $root $_) -PathType Leaf) }).Count -eq 0)}
 }
-$components += Component 'AgentMeter application and original artwork' $version 'Committed local AgentMeter source' $true 'MIT' @('LICENSE.txt')
+$components += Component 'Llumi application and original artwork' $version 'Committed local AgentMeter source' $true 'MIT' @('LICENSE.txt')
 $components += Component 'OpenAI Codex identification artwork' 'Mac reference 7b41fc7f8e61cdc3b5ff97130c9858b3f7409b01' 'https://cdn.openai.com/brand/OpenAI-Logos-2025.zip' $true 'Vendor artwork/trademark terms; not MIT' @('THIRD-PARTY-NOTICES.txt')
 $components += Component 'Claude identification artwork' 'Mac reference 7b41fc7f8e61cdc3b5ff97130c9858b3f7409b01' 'https://claude.ai/favicon.svg' $true 'Vendor artwork/trademark terms; not MIT' @('THIRD-PARTY-NOTICES.txt')
 foreach ($framework in @($config.runtimeOptions.includedFrameworks)) {
@@ -33,7 +33,7 @@ foreach ($external in @('Codex CLI','Claude Code','Claude Agent SDK','Node.js'))
 if (@($components | Where-Object { $_.bundled -and -not $_.noticePresent }).Count) { throw 'A redistributed component is missing its required notice.' }
 $inventory = [ordered]@{
     schemaVersion = 2
-    product = 'AgentMeter Windows V2'
+    product = 'Llumi Windows'
     providerExecutablesBundled = $false
     providerSdkBundled = $false
     nodeBundled = $false

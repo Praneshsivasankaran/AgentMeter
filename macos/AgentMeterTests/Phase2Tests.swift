@@ -359,3 +359,57 @@ import Darwin
   }
 
 }
+
+@MainActor final class LlumiMigrationTests: XCTestCase {
+  private func suite(_ body: (UserDefaults) throws -> Void) rethrows {
+    let name = "Llumi-migration-" + UUID().uuidString
+    let d = UserDefaults(suiteName: name)!
+    defer { d.removePersistentDomain(forName: name) }
+    try body(d)
+  }
+  func testNewDomainAndExplicitLegacySources() {
+    XCTAssertEqual(InstanceLease.identifier, "io.github.praneshsivasankaran.llumi")
+    XCTAssertEqual(BetaPreferences.legacyDomains, ["io.github.praneshsivasankaran.agentmeter", "local.agentmeter.mac"])
+  }
+  func testNewestValidLegacyWinsAndOnlyKnownValuesMigrate() {
+    suite { d in
+      BetaPreferences.migrate(sources: [["appearance":"dark", "setupCompleted":true, "notchEnabled":"wrong"],
+        ["appearance":"light", "notchEnabled":false, "token":"synthetic", "loginEnabled":true]], to:d)
+      XCTAssertEqual(d.string(forKey:"appearance"), "dark")
+      XCTAssertEqual(d.object(forKey:"notchEnabled") as? Bool, false)
+      XCTAssertTrue(SetupCompletion.isComplete(d))
+      XCTAssertNil(d.object(forKey:"token")); XCTAssertNil(d.object(forKey:"loginEnabled"))
+    }
+  }
+  func testCurrentCompletionFalseWinsAndMigrationIsIdempotent() {
+    suite { d in
+      d.set(false, forKey:SetupCompletion.key);d.set("system",forKey:"appearance")
+      BetaPreferences.migrate(sources:[["setupCompleted":true,"appearance":"dark"]],to:d)
+      XCTAssertFalse(SetupCompletion.isComplete(d));XCTAssertEqual(d.string(forKey:"appearance"),"system")
+      BetaPreferences.migrate(sources:[["menuEnabled":false]],to:d)
+      XCTAssertNil(d.object(forKey:"menuEnabled"))
+    }
+  }
+  func testMalformedCompletionCannotSkipMigrationOrSetup() {
+    suite { d in
+      d.set("true",forKey:BetaPreferences.completion)
+      d.set("true",forKey:SetupCompletion.key)
+      BetaPreferences.migrate(sources:[["setupCompleted":1,"notchEnabled":1]],to:d)
+      XCTAssertFalse(SetupCompletion.isComplete(d))
+      XCTAssertEqual(Preferences(defaults:d).appearance,.system)
+    }
+  }
+  func testLegacyAndLlumiLeasesExcludeBothDirectionsAndReleaseOnFailure() throws {
+    let root=FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+    defer { try? FileManager.default.removeItem(at:root) }
+    var old=try InstanceLease.acquire(directory:root.appendingPathComponent(InstanceLease.legacyIdentifier))
+    XCTAssertNotNil(old);XCTAssertNil(try InstanceLease.acquireProductLeases(root:root))
+    old=nil
+    var current=try InstanceLease.acquireProductLeases(root:root)
+    XCTAssertEqual(current?.count,2)
+    XCTAssertNil(try InstanceLease.acquire(directory:root.appendingPathComponent(InstanceLease.legacyIdentifier)))
+    XCTAssertNil(try InstanceLease.acquireProductLeases(root:root))
+    current=nil
+    XCTAssertNotNil(try InstanceLease.acquireProductLeases(root:root))
+  }
+}

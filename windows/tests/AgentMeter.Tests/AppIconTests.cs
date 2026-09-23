@@ -5,7 +5,7 @@ public sealed class AppIconTests
     [Theory]
     [InlineData(16)] [InlineData(20)] [InlineData(24)] [InlineData(32)]
     [InlineData(48)] [InlineData(64)] [InlineData(128)] [InlineData(256)]
-    public void EmbeddedIconHasNativeSizeMonochromeAscendingBars(int size)
+    public void EmbeddedRaspberryGaugeHasNativeSizeAndTransparentMargins(int size)
     {
         // System.Drawing's Icon loader treats the ICO 256px zero-dimension byte
         // as zero when selecting among frames; Explorer uses the valid PNG frame.
@@ -17,28 +17,18 @@ public sealed class AppIconTests
             using var icon = AppIcon.Load(size);
             Assert.Equal(new Size(size, size), icon.Size);
         }
-        var heights = new List<int>();
-        var width = (int)Math.Round(size * .17);
-        var gap = Math.Max(1, (int)Math.Round(size * .075));
-        var left = (int)Math.Floor((size - (3 * width + 2 * gap)) / 2d);
-        for (var index = 0; index < 3; index++)
-        {
-            var x = left + index * (width + gap) + width / 2;
-            var white = 0;
-            for (var y = 0; y < size; y++)
-            {
-                var pixel = bitmap.GetPixel(x, y);
-                Assert.Equal(pixel.R, pixel.G); Assert.Equal(pixel.G, pixel.B);
-                if (pixel.A >= 250 && pixel.R >= 230) white++;
-            }
-            heights.Add(white);
-        }
-        Assert.True(heights[0] > 0 && heights[0] < heights[1] && heights[1] < heights[2]);
+        Assert.Equal(0, bitmap.GetPixel(0, 0).A);
+        var left = bitmap.GetPixel((int)(size * .23), (int)(size * .55));
+        var right = bitmap.GetPixel((int)(size * .77), (int)(size * .55));
+        Assert.True(left.B > left.G);
+        Assert.True(right.R > right.G);
+        Assert.True(right.R > right.B);
+
     }
 
     private static Bitmap ReadFrame(int size)
     {
-        using var stream = typeof(AppIcon).Assembly.GetManifestResourceStream("AgentMeter.Assets.AgentMeter.ico")!;
+        using var stream = typeof(AppIcon).Assembly.GetManifestResourceStream("AgentMeter.Assets.Llumi.ico")!;
         using var reader = new BinaryReader(stream);
         Assert.Equal(0, reader.ReadUInt16()); Assert.Equal(1, reader.ReadUInt16());
         var count = reader.ReadUInt16();

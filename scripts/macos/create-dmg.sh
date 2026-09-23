@@ -6,25 +6,25 @@ APP="$(cd "$1" && pwd)"
 MODE="$2"
 [[ "$MODE" == --unsigned || "$MODE" == --signed || "$MODE" == --print-production-name ]] || fail 'Choose --unsigned or --signed explicitly'
 app_check "$APP"
-VERSION=$(/usr/libexec/PlistBuddy -c 'Print :AgentMeterReleaseVersion' "$APP/Contents/Info.plist")
+VERSION=$(/usr/libexec/PlistBuddy -c 'Print :LlumiReleaseVersion' "$APP/Contents/Info.plist")
 if [[ "$MODE" == --print-production-name ]]; then
-  printf 'AgentMeter-%s-macos.dmg\n' "$VERSION"
+  printf 'Llumi-%s-macos.dmg\n' "$VERSION"
   exit 0
 fi
 if [[ "$MODE" == --signed ]]; then
   identity_check
   "$ROOT/scripts/macos/verify-release.sh" "$APP" --notarized
 fi
-VERSION=$(/usr/libexec/PlistBuddy -c 'Print :AgentMeterReleaseVersion' "$APP/Contents/Info.plist")
+VERSION=$(/usr/libexec/PlistBuddy -c 'Print :LlumiReleaseVersion' "$APP/Contents/Info.plist")
 mkdir -p "$OUT"
 SUFFIX=''; [[ "$MODE" != --unsigned ]] || SUFFIX='-unsigned'
-DMG="$OUT/AgentMeter-$VERSION-macos$SUFFIX.dmg"
+DMG="$OUT/Llumi-$VERSION-macos$SUFFIX.dmg"
 [[ ! -e "$DMG" ]] || fail 'Artifact already exists; will not overwrite.'
 STAGE=$(mktemp -d "$OUT/.stage.XXXXXX")
 trap 'rm -rf "$STAGE"' EXIT
-ditto --norsrc --noextattr "$APP" "$STAGE/AgentMeter.app"
+ditto --norsrc --noextattr "$APP" "$STAGE/Llumi.app"
 ln -s /Applications "$STAGE/Applications"
-/usr/bin/hdiutil create -quiet -volname AgentMeter -srcfolder "$STAGE" -format UDZO "$DMG"
+/usr/bin/hdiutil create -quiet -volname Llumi -srcfolder "$STAGE" -format UDZO "$DMG"
 /usr/bin/hdiutil verify "$DMG"
 if [[ "$MODE" == --signed ]]; then
   /usr/bin/codesign --timestamp --sign "$DEVELOPER_ID_APPLICATION" "$DMG"

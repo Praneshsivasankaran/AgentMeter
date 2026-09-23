@@ -1,4 +1,4 @@
-AgentMeter original source is MIT licensed; see LICENSE in this bundle.
+Llumi original source is MIT licensed; see LICENSE in this bundle.
 
 Provider executables and SDKs are not bundled. The user installs them separately and their own terms apply.
 
@@ -8,4 +8,4 @@ Guidelines: https://openai.com/brand/
 Claude mark: https://claude.ai/favicon.svg
 Guidelines: https://www.anthropic.com/legal/trademark-guidelines
 
-AgentMeter is an independent utility. These marks do not imply endorsement or affiliation.
+Llumi is an independent utility. These marks do not imply endorsement or affiliation.
