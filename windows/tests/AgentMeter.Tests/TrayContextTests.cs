@@ -388,6 +388,23 @@ public sealed class TrayContextTests
         await completed.Task.WaitAsync(TimeSpan.FromSeconds(18));
     }
 
+    [Fact]
+    public async Task ClosingSetupWithTrayDisabledRestoresReachableMainWindow()
+    {
+        var coordinator = new RefreshCoordinator([new FakeProvider("Codex", _ => Task.FromResult(GoodResult()))]);
+        await RunMessageLoop(coordinator, async (context, popup) =>
+        {
+            await Field<Task>(context, "activeRefresh");
+            typeof(TrayContext).GetMethod("OpenSetup", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(context, null);
+            typeof(TrayContext).GetMethod("ChangePreferences", BindingFlags.Instance | BindingFlags.NonPublic)!
+                .Invoke(context, [new Preferences(false, false, Appearance.Light)]);
+            Assert.False(Field<NotifyIcon>(context, "tray").Visible);
+            Field<SetupForm>(context, "setupWindow").Close();
+            Assert.True(popup.Visible);
+            Assert.Equal(FormWindowState.Normal, popup.WindowState);
+        });
+    }
+
     private static T Field<T>(TrayContext context, string name) =>
         (T)typeof(TrayContext).GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(context)!;
 

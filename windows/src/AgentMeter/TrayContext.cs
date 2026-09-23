@@ -131,8 +131,11 @@ internal sealed class TrayContext : ApplicationContext
     private void OpenSetup()
     {
         if (setupWindow is null || setupWindow.IsDisposed)
+        {
             setupWindow = new SetupForm(new SetupFlow(setupStore), () => coordinator.States, StartRefresh,
                 () => preferences, ChangePreferences, startup, ToggleStartup, () => { needsSetup = false; ShowPopup(); });
+            setupWindow.FormClosed += (_, _) => { if (!exiting && !preferences.TrayIcon) ShowPopup(); };
+        }
         setupWindow.Show(); setupWindow.Activate();
     }
     private void OpenCheckSetup()
