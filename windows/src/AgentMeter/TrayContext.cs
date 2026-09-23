@@ -26,6 +26,10 @@ internal sealed class TrayContext : ApplicationContext
     private readonly Func<ActivitySnapshot> captureActivity;
     private readonly PreferenceStore preferenceStore;
     private Preferences preferences;
+    private readonly SetupCompletionStore setupStore;
+    private SetupForm? setupWindow;
+    private SetupForm? checkWindow;
+    private bool needsSetup;
     private ActivitySnapshot activity = ActivitySnapshot.Empty;
     private Task activityTask = Task.CompletedTask;
     private readonly CancellationTokenSource lifetime = new();
@@ -39,7 +43,7 @@ internal sealed class TrayContext : ApplicationContext
 
     public TrayContext(RefreshCoordinator coordinator, DiagnosticLog log, EventWaitHandle showEvent,
         MonitorPositionStore? positions = null, IStartupRegistration? startup = null, EventWaitHandle? quitEvent = null,
-        Func<ActivitySnapshot>? captureActivity = null, PreferenceStore? preferenceStore = null)
+        Func<ActivitySnapshot>? captureActivity = null, PreferenceStore? preferenceStore = null, SetupCompletionStore? setupStore = null)
     {
         this.coordinator = coordinator;
         this.log = log;
@@ -49,6 +53,8 @@ internal sealed class TrayContext : ApplicationContext
             : new StartupRegistration(Environment.ProcessPath ?? Application.ExecutablePath, log.Write));
         this.captureActivity = captureActivity ?? new WindowsActivitySource().Capture;
         this.preferenceStore = preferenceStore ?? PreferenceStore.Default();
+        this.setupStore = setupStore ?? SetupCompletionStore.Default();
+        needsSetup = !this.setupStore.RecognizeExisting(this.preferenceStore.HasValidExistingPreferences());
         preferences = this.preferenceStore.Load();
         Palette.Apply(preferences.Appearance);
         var names = coordinator.States.Select(s => s.Name).ToArray();
@@ -58,11 +64,15 @@ internal sealed class TrayContext : ApplicationContext
         menu.Items.Add("Open AgentMeter", null, (_, _) => ShowPopup());
         pinMenu = new ToolStripMenuItem("Pin Monitor", null, (_, _) => { if (monitor.Visible) UnpinMonitor(); else OpenMonitor(); });
         menu.Items.Add("Refresh", null, (_, _) => StartRefresh());
+        menu.Items.Add("Setup AgentMeter…", null, (_, _) => OpenSetup());
+        menu.Items.Add("Check Setup…", null, (_, _) => OpenCheckSetup());
         menu.Items.Add("Settings", null, (_, _) => { ShowPopup(); popup.ShowSettings(); });
         startupMenu.Click += (_, _) => ToggleStartup();
         menu.Opening += (_, _) => UpdateStartupState();
         menu.Items.Add("Quit", null, async (_, _) => await ExitAsync());
         tray.MouseClick += (_, e) => { if (e.Button == MouseButtons.Left) ShowPopup(); };
+        popup.SetupRequested += OpenSetup;
+        popup.CheckSetupRequested += OpenCheckSetup;
         popup.RefreshRequested += StartRefresh;
         popup.ExitRequested += async () => await ExitAsync();
         popup.PinRequested += OpenMonitor;
@@ -112,14 +122,29 @@ internal sealed class TrayContext : ApplicationContext
         poll.Start();
         StartRefresh();
         activityTimer.Start(); SampleActivity();
-        if (!preferences.TrayIcon) ShowPopup();
+        if (needsSetup) OpenSetup();
+        else if (!preferences.TrayIcon) ShowPopup();
         log.Write("tray.ready");
     }
 
-    internal void OpenPanel() => ShowPopup();
+    internal void OpenPanel() { if (needsSetup) OpenSetup(); else ShowPopup(); }
+    private void OpenSetup()
+    {
+        if (setupWindow is null || setupWindow.IsDisposed)
+            setupWindow = new SetupForm(new SetupFlow(setupStore), () => coordinator.States, StartRefresh,
+                () => preferences, ChangePreferences, startup, ToggleStartup, () => { needsSetup = false; ShowPopup(); });
+        setupWindow.Show(); setupWindow.Activate();
+    }
+    private void OpenCheckSetup()
+    {
+        if (checkWindow is null || checkWindow.IsDisposed)
+            checkWindow = new SetupForm(new SetupFlow(setupStore), () => coordinator.States, StartRefresh,
+                () => preferences, ChangePreferences, startup, ToggleStartup, () => { }, checkOnly: true);
+        checkWindow.Show(); checkWindow.Activate(); StartRefresh();
+    }
 
     private void OnUserPreferenceChanged(object sender, UserPreferenceChangedEventArgs e) => OnUi(() =>
-    { Palette.Apply(preferences.Appearance); popup.ApplyTheme(); monitor.UpdateSurface(); });
+    { Palette.Apply(preferences.Appearance); popup.ApplyTheme(); if (setupWindow is { IsDisposed: false }) setupWindow.ApplyTheme(); if (checkWindow is { IsDisposed: false }) checkWindow.ApplyTheme(); monitor.UpdateSurface(); });
 
     private void ChangePreferences(Preferences value)
     {
@@ -259,6 +284,8 @@ internal sealed class TrayContext : ApplicationContext
     {
         if (exiting) return;
         var states = coordinator.States;
+        if (setupWindow is { IsDisposed: false }) setupWindow.RefreshStatuses();
+        if (checkWindow is { IsDisposed: false }) checkWindow.RefreshStatuses();
         if (popup.Visible) popup.Render(states, coordinator.IsRefreshing, log.WriteFailed);
         if (monitor.Visible)
         {
@@ -310,6 +337,7 @@ internal sealed class TrayContext : ApplicationContext
         monitor.AllowExit = true;
         monitor.Close();
         popup.Close();
+        setupWindow?.Close(); checkWindow?.Close();
         ExitThread();
     }
 
@@ -331,6 +359,7 @@ internal sealed class TrayContext : ApplicationContext
             showWait.Unregister(null);
             quitWait?.Unregister(null);
             poll.Dispose(); display.Dispose(); recovery.Dispose(); activityTimer.Dispose(); tray.Visible = false; tray.Dispose(); menu.Dispose();
+            setupWindow?.Dispose(); checkWindow?.Dispose();
             popup.AllowExit = true; popup.Dispose();
             monitor.AllowExit = true; monitor.Dispose();
             icon.Dispose(); trayIcon.Dispose(); lifetime.Dispose();

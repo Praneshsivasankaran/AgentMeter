@@ -74,11 +74,19 @@ struct UsageSnapshot: Sendable {
         ($0.durationMinutes ?? 0) > ($1.durationMinutes ?? 0)
       }.first
     }
-    return windows.first { $0.id == "seven_day" } ?? windows.first { $0.id == "five_hour" }
+    return claudeWindow("five_hour")
+  }
+  func claudeWindow(_ id: String) -> UsageWindow? {
+    let matches = (reading?.windows ?? []).filter { $0.id == id && $0.bucket == "claude" }
+    return matches.count == 1 ? matches[0] : nil
+  }
+  var detailWindows: [UsageWindow] {
+    provider == .claude ? [claudeWindow("five_hour"), claudeWindow("seven_day")].compactMap { $0 }
+      : primary.map { [$0] } ?? []
   }
   var compact: String {
     guard let remaining = primary?.remaining else {
-      return "\(provider.title) · \(state == .loading ? "Loading" : "—")"
+      return "\(provider.title) · \(state == .loading ? "Loading" : "—")\(state == .stale ? " · stale" : "")"
     }
     return "\(provider.title) \(Self.percent(remaining))\(state == .stale ? " · stale" : "")"
   }

@@ -29,6 +29,8 @@ internal sealed class UsageForm : Form
     private bool loading, logFailed, rendering, syncing, settingsShown;
     private Preferences preferences = new();
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)] internal bool AllowExit { get; set; }
+    internal event Action? SetupRequested;
+    internal event Action? CheckSetupRequested;
     internal event Action? RefreshRequested;
     internal event Action? ExitRequested;
     internal event Action? PinRequested;
@@ -58,6 +60,8 @@ internal sealed class UsageForm : Form
         actions.Items.Add("Open AgentMeter", null, (_, _) => ShowUsage());
         actions.Items.Add("Refresh", null, (_, _) => RefreshRequested?.Invoke());
         actions.Items.Add("Settings", null, (_, _) => ShowSettings());
+        actions.Items.Add("Setup AgentMeter…", null, (_, _) => SetupRequested?.Invoke());
+        actions.Items.Add("Check Setup…", null, (_, _) => CheckSetupRequested?.Invoke());
         actions.Items.Add("Quit", null, (_, _) => ExitRequested?.Invoke());
         menu.Click += (_, _) => { MenuOpening?.Invoke(); actions.Show(menu, new Point(0, menu.Height)); };
         launch.Click += (_, _) => { if (!syncing) StartupToggleRequested?.Invoke(); };

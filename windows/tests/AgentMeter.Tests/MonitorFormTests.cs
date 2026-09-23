@@ -23,9 +23,10 @@ public sealed class MonitorFormTests
     {
         using var form = NewForm();
         form.Render(States(), Now);
-        Assert.Equal(["29%", "92%"], form.RowValues);
+        Assert.Equal(["29%", "100%"], form.RowValues);
         Assert.Contains("29% remaining", form.AccessibilityObject.GetChild(0)!.Name);
-        Assert.Contains("7 days", form.AccessibilityObject.GetChild(1)!.Name);
+        Assert.Contains("5 hours", form.AccessibilityObject.GetChild(1)!.Name);
+        Assert.Contains("Weekly", form.AccessibilityObject.GetChild(1)!.Name);
         Assert.Equal(2, form.AccessibilityObject.GetChildCount());
         Assert.Equal(AccessibleRole.StaticText, form.AccessibilityObject.GetChild(1)!.Role);
     });
@@ -50,7 +51,7 @@ public sealed class MonitorFormTests
     {
         using var form = NewForm();
         form.Render(States(), Now.AddMinutes(3));
-        Assert.Equal(["29%", "92%"], form.RowValues);
+        Assert.Equal(["29%", "100%"], form.RowValues);
         Assert.Contains("Stale", form.AccessibilityObject.GetChild(0)!.Name);
         Assert.Contains("29% remaining", form.AccessibilityObject.GetChild(0)!.Name);
         using var image = form.CreatePreviewBitmap();

@@ -332,7 +332,7 @@ import Darwin
     snapshot.apply(.fail(.accountChanged))
     XCTAssertEqual(ProviderGlance(snapshot: snapshot).percentage, "--")
   }
-  func testClaudeLongTermAndMixedUnknownGlances() throws {
+  func testClaudeFiveHourAndMixedUnknownGlances() throws {
     var snapshot = UsageSnapshot(provider: .claude)
     let short = try UsageWindow(
       id: "five_hour", bucket: "claude", label: "", durationMinutes: 300, used: 0, reset: nil)
@@ -342,7 +342,7 @@ import Darwin
     let rows = [
       ProviderGlance(snapshot: UsageSnapshot(provider: .codex)), ProviderGlance(snapshot: snapshot),
     ]
-    XCTAssertEqual(rows.map(\.percentage), ["…", "88%"])
-    XCTAssertTrue(rows[1].accessibility.contains("Claude, 88% remaining"))
+    XCTAssertEqual(rows.map(\.percentage), ["…", "100%"])
+    XCTAssertTrue(rows[1].accessibility.contains("Claude, 100% remaining"))
   }
 }

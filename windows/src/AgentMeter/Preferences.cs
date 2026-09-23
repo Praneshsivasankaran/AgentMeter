@@ -8,6 +8,21 @@ internal sealed record Preferences(bool CompactMonitor = true, bool TrayIcon = t
 internal sealed class PreferenceStore(string path)
 {
     internal static PreferenceStore Default() => new(Path.Combine(PackagedEnvironment.DataDirectory, "v2-preferences.json"));
+    internal bool HasValidExistingPreferences()
+    {
+        try
+        {
+            using var file = File.OpenRead(path);
+            if (file.Length > 4096) return false;
+            using var document = JsonDocument.Parse(file);
+            var root = document.RootElement;
+            if (root.ValueKind != JsonValueKind.Object) return false;
+            return root.EnumerateObject().Any(p =>
+                (p.Name is "CompactMonitor" or "TrayIcon" && p.Value.ValueKind is JsonValueKind.True or JsonValueKind.False)
+                || (p.Name == "Appearance" && p.Value.TryGetInt32(out var n) && Enum.IsDefined((Appearance)n)));
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException or JsonException or InvalidOperationException) { return false; }
+    }
     internal Preferences Load()
     {
         try

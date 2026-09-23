@@ -240,7 +240,7 @@ public sealed class TrayContextTests
         var now = DateTimeOffset.UtcNow;
         var coordinator = new RefreshCoordinator([
             new FakeProvider("Codex", _ => Task.FromResult(new ProviderResult(new UsageSnapshot([new("codex/primary", "7 days", 15, now.AddDays(2))], now, "fixture")))),
-            new FakeProvider("Claude Code", _ => Task.FromResult(new ProviderResult(new UsageSnapshot([new("seven_day", "7 days", 3, now.AddDays(2))], now, "fixture"))))]);
+            new FakeProvider("Claude Code", _ => Task.FromResult(new ProviderResult(new UsageSnapshot([new("five_hour", "5 hours", 3, now.AddHours(2))], now, "fixture"))))]);
         await RunMessageLoop(coordinator, async (context, popup) =>
         {
             await Field<Task>(context, "activeRefresh");
@@ -332,7 +332,9 @@ public sealed class TrayContextTests
             try
             {
                 using var showEvent = new EventWaitHandle(false, EventResetMode.AutoReset);
-                context = new TrayContext(coordinator, new DiagnosticLog(logDirectory), showEvent, new MonitorPositionStore(Path.Combine(logDirectory, "position.json")), new MemoryStartup(), captureActivity: () => ActivitySnapshot.Empty, preferenceStore: new PreferenceStore(Path.Combine(logDirectory, "preferences.json")));
+                var setupStore = new SetupCompletionStore(Path.Combine(logDirectory, "setup.json"));
+                setupStore.Save(true);
+                context = new TrayContext(coordinator, new DiagnosticLog(logDirectory), showEvent, new MonitorPositionStore(Path.Combine(logDirectory, "position.json")), new MemoryStartup(), captureActivity: () => ActivitySnapshot.Empty, preferenceStore: new PreferenceStore(Path.Combine(logDirectory, "preferences.json")), setupStore: setupStore);
                 var popup = Field<UsageForm>(context, "popup");
                 var tray = Field<NotifyIcon>(context, "tray");
                 using var watchdog = new System.Threading.Timer(_ =>

@@ -6,6 +6,15 @@ namespace AgentMeter;
 // A missing core value stays unknown; a generous bonus window must not replace it.
 internal static class MonitorSelection
 {
+    internal static UsageWindow[] Details(ProviderState state)
+    {
+        if (state.Name is not ("Claude" or "Claude Code")) return Select(state) is { } main ? [main] : [];
+        return new[] { "five_hour", "seven_day" }.Select(id =>
+        {
+            var matches = state.Snapshot?.Windows.Where(w => w.Id.Equals(id, StringComparison.OrdinalIgnoreCase)).Take(2).ToArray();
+            return matches?.Length == 1 ? matches[0] : null;
+        }).OfType<UsageWindow>().ToArray();
+    }
     internal static UsageWindow? Select(ProviderState state)
     {
         var windows = state.Snapshot?.Windows;
@@ -20,7 +29,7 @@ internal static class MonitorSelection
             ? ["codex/primary", "codex/secondary"]
             : state.Name.Equals("Claude", StringComparison.OrdinalIgnoreCase) ||
               state.Name.Equals("Claude Code", StringComparison.OrdinalIgnoreCase)
-                ? ["seven_day", "five_hour"] : [];
+                ? ["five_hour"] : [];
         foreach (var id in priority)
         {
             // The supported legacy Codex envelope emits "Codex/primary".

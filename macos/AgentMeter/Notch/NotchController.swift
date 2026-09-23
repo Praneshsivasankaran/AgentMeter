@@ -168,7 +168,7 @@ final class TrackingSurface: NSView {
       expanded
         ? (presentation.rows.count > 1 ? 390 : 228)
         : max(112, measured + 40 + CGFloat(max(0, presentation.rows.count - 1)) * 25))
-    let height: CGFloat = expanded ? 144 : 34
+    let height: CGFloat = expanded ? (presentation.state.providers.contains(.claude) ? 174 : 144) : 34
     // Preserve Phase 1's screen/visible-area anchor. Presentation alone changes size.
     let anchor = MonitorGeometry.frame(
       screen: screen.frame, visible: screen.visibleFrame, safeTop: screen.safeAreaInsets.top,

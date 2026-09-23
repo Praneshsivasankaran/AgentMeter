@@ -84,18 +84,18 @@ internal sealed class MonitorForm : Form
     {
         get { var p = base.CreateParams; p.ExStyle |= 0x80 | 0x08000000; if (!opaqueFallback) p.ExStyle |= 0x80000; return p; }
     }
-    internal static Size SizeForDpi(int dpi, int providerCount = 2, bool expanded = false)
+    internal static Size SizeForDpi(int dpi, int providerCount = 2, bool expanded = false, bool claudeDetails = true)
     {
         var scale = Math.Clamp(dpi, 48, 768) / 96d;
         return new((int)Math.Round((expanded ? (providerCount > 1 ? 390 : 228) : (providerCount > 1 ? 202 : 112)) * scale),
-            (int)Math.Round((expanded ? 144 : 34) * scale));
+            (int)Math.Round((expanded ? (claudeDetails ? 194 : 144) : 34) * scale));
     }
     internal void SetProviders(IEnumerable<string> names)
     {
         var next = names.Distinct().ToArray(); if (providerNames.SequenceEqual(next)) return;
         providerNames = next; providersChanged = true;
-        if (Visible) BeginTransition(SizeForDpi(DeviceDpi, providerNames.Length, hovered), 1, hovered ? 1 : 0, true);
-        else { ClientSize = SizeForDpi(DeviceDpi, providerNames.Length, hovered); KeepOnScreen(); }
+        if (Visible) BeginTransition(SizeForDpi(DeviceDpi, providerNames.Length, hovered, providerNames.Any(n => n is "Claude" or "Claude Code")), 1, hovered ? 1 : 0, true);
+        else { ClientSize = SizeForDpi(DeviceDpi, providerNames.Length, hovered, providerNames.Any(n => n is "Claude" or "Claude Code")); KeepOnScreen(); }
     }
     internal void Render(IReadOnlyList<ProviderState> states, DateTimeOffset? now = null)
     {
@@ -108,7 +108,11 @@ internal sealed class MonitorForm : Form
             var status = PopupText.Status(state, at);
             var reset = window is null ? status : PopupText.Reset(window, at);
             var hint = $"{name}: {status}\n{value} remaining\n{(window is null ? "" : PopupText.WindowName(name, window))}\n{reset}";
-            return new MonitorRow(name, value, window?.RemainingPercent, stale, status, reset, window is null ? "Allowance unavailable" : PopupText.WindowName(name, window), hint);
+            var details = state.Name is "Claude" or "Claude Code"
+                ? string.Join("\n", MonitorSelection.Details(state).Select(w =>
+                    $"{(w.Id == "five_hour" ? "5-hour" : "Weekly")} · {PopupText.Remaining(w)} remaining\n{PopupText.Reset(w, at)}"))
+                : "";
+            return new MonitorRow(name, value, window?.RemainingPercent, stale, status, reset, window is null ? "Allowance unavailable" : PopupText.WindowName(name, window), hint + "\n" + details, details);
         }).ToArray();
         var changed = providersChanged || !rows.Select(r => r.Visual(hovered)).SequenceEqual(next.Select(r => r.Visual(hovered)));
         rows = next; providersChanged = false;
@@ -117,7 +121,7 @@ internal sealed class MonitorForm : Form
     internal void ShowMonitor(Point position)
     {
         var wasVisible = Visible; DesiredVisible = true;
-        var size = SizeForDpi(DeviceDpi, providerNames.Length, hovered);
+        var size = SizeForDpi(DeviceDpi, providerNames.Length, hovered, providerNames.Any(n => n is "Claude" or "Claude Code"));
         if (!wasVisible)
         {
             Location = position; ClientSize = size; KeepOnScreen();
@@ -175,10 +179,10 @@ internal sealed class MonitorForm : Form
     {
         if (providerNames.Length == 0 || hovered == value || (Visible && !DesiredVisible)) return;
         hovered = value;
-        BeginTransition(SizeForDpi(DeviceDpi, providerNames.Length, hovered), 1, hovered ? 1 : 0, animate);
+        BeginTransition(SizeForDpi(DeviceDpi, providerNames.Length, hovered, providerNames.Any(n => n is "Claude" or "Claude Code")), 1, hovered ? 1 : 0, animate);
     }
     protected override void OnDpiChanged(DpiChangedEventArgs e)
-    { base.OnDpiChanged(e); transition.Stop(); animation.Stop(); ClientSize = SizeForDpi(DeviceDpi, providerNames.Length, hovered); expansion = hovered ? 1 : 0; KeepOnScreen(); UpdateSurface(); }
+    { base.OnDpiChanged(e); transition.Stop(); animation.Stop(); ClientSize = SizeForDpi(DeviceDpi, providerNames.Length, hovered, providerNames.Any(n => n is "Claude" or "Claude Code")); expansion = hovered ? 1 : 0; KeepOnScreen(); UpdateSurface(); }
     private void ScheduleHover(bool value)
     { hoverDelay.Stop(); hoverPending = value; hoverDelay.Interval = value ? 120 : 100; if (DesiredVisible) hoverDelay.Start(); }
     protected override void OnMouseEnter(EventArgs e) { base.OnMouseEnter(e); ScheduleHover(true); }
@@ -263,6 +267,14 @@ internal sealed class MonitorForm : Form
                 using var bar = DrawingHelpers.RoundedRectangle(new(x, 53, Math.Max(1, (float)(columnWidth * row.Remaining / 100)), 5), 2.5f);
                 g.FillPath(fill, bar);
             }
+            if (row.Name is "Claude" or "Claude Code")
+            {
+                using var detailBrush = new SolidBrush(Detail(Ink));
+                g.DrawString(string.IsNullOrEmpty(row.Details) ? row.Status : row.Details, bodyFont, detailBrush,
+                    new RectangleF(x, 65, columnWidth, 105));
+                if (row.Stale) Draw(g, "Stale", bodyFont, Detail(ink), new(x, 173, columnWidth, 18));
+                continue;
+            }
             Draw(g, row.Window, bodyFont, Detail(Muted), new(x, 65, columnWidth, 19));
             using var resetFormat = new StringFormat { Trimming = StringTrimming.EllipsisWord };
             using var resetBrush = new SolidBrush(Detail(Ink));
@@ -301,8 +313,8 @@ internal sealed class MonitorForm : Form
         public override AccessibleStates State => AccessibleStates.ReadOnly;
         public override AccessibleObject? Parent => parent;
     }
-    private sealed record MonitorRow(string Name, string Value, double? Remaining, bool Stale, string Status, string Reset, string Window, string Hint)
-    { public string Visual(bool expanded) => $"{Name}|{Value}|{Remaining}|{Stale}" + (expanded ? $"|{Status}|{Reset}" : ""); }
+    private sealed record MonitorRow(string Name, string Value, double? Remaining, bool Stale, string Status, string Reset, string Window, string Hint, string Details)
+    { public string Visual(bool expanded) => $"{Name}|{Value}|{Remaining}|{Stale}" + (expanded ? $"|{Status}|{Reset}|{Details}" : ""); }
     protected override void Dispose(bool disposing)
     { base.Dispose(disposing); if (disposing) { transition.Dispose(); hoverDelay.Dispose(); animation.Dispose(); menu.Dispose(); surface?.Dispose(); bodyFont.Dispose(); numberFont.Dispose(); expandedNumberFont.Dispose(); } }
 }

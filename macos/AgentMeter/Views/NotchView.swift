@@ -21,20 +21,25 @@ struct NotchView: View {
                 }
                 AllowanceBar(remaining: row.snapshot.primary?.remaining, color: row.id.notchAccent(for: colorScheme))
                 VStack(alignment: .leading, spacing: 4) {
-                  if let primary = row.snapshot.primary {
-                    Text(
-                      (row.id == .codex ? "Main · " : "")
-                        + (UsageCopy.duration(primary.durationMinutes) ?? primary.label)
-                    )
-                    .font(.caption2).foregroundStyle(.secondary)
+                  ForEach(row.snapshot.detailWindows) { window in
+                    if row.id == .claude {
+                      HStack {
+                        Text(window.id == "five_hour" ? "5-hour" : "Weekly")
+                        Spacer()
+                        Text(window.remaining.map(UsageSnapshot.percent) ?? "—").monospacedDigit()
+                      }.font(.caption.weight(.medium))
+                    } else {
+                      Text("Main · " + (UsageCopy.duration(window.durationMinutes) ?? window.label))
+                        .font(.caption2).foregroundStyle(.secondary)
+                    }
+                    Text(window.resetText(at: context.date)).font(.caption).foregroundStyle(.secondary)
+                    if row.id == .codex, let reset = window.reset, reset > context.date {
+                      Text(reset, format: .dateTime.month(.abbreviated).day().hour().minute())
+                        .font(.caption2).foregroundStyle(.secondary)
+                    }
                   }
-                  Text(
-                    row.snapshot.primary?.resetText(at: context.date) ?? row.snapshot.state.rawValue
-                  ).font(.caption)
-                  if let reset = row.snapshot.primary?.reset, reset > context.date {
-                    Text(reset, format: .dateTime.month(.abbreviated).day().hour().minute()).font(
-                      .caption2
-                    ).foregroundStyle(.secondary)
+                  if row.snapshot.detailWindows.isEmpty {
+                    Text(row.snapshot.state.rawValue).font(.caption)
                   }
                   if row.snapshot.state == .stale {
                     Text("Stale · last verified allowance").font(.caption2).foregroundStyle(
@@ -42,7 +47,7 @@ struct NotchView: View {
                   }
                 }
               }.frame(maxWidth: .infinity, alignment: .leading)
-                .accessibilityElement(children: .combine).accessibilityLabel(row.accessibility)
+                .accessibilityElement(children: .combine)
             }
           }.padding(18)
         }

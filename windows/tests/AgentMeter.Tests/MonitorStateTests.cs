@@ -44,7 +44,7 @@ public sealed class MonitorStateTests
     [Theory]
     [InlineData("Codex", "codex/secondary")]
     [InlineData("Claude", "five_hour")]
-    [InlineData("Claude Code", "seven_day")]
+    [InlineData("Claude Code", "five_hour")]
     public void RecognizedFallbackRetainsOriginalWindow(string provider, string id)
     {
         var selected = W(id);
@@ -52,11 +52,11 @@ public sealed class MonitorStateTests
     }
 
     [Fact]
-    public void ClaudeUsesWeeklyIdRegardlessOfLabelsOrderAndOtherModelLimits()
+    public void ClaudeUsesFiveHourRegardlessOfLabelsOrderAndOtherModelLimits()
     {
-        var main = W("seven_day", 8);
-        Assert.Same(main, MonitorSelection.Select(State("Claude", W("five_hour", 0), W("seven_day_opus", 99), main)));
-        Assert.Same(main, MonitorSelection.Select(State("Claude", main, W("five_hour", 0))));
+        var main = W("five_hour", 8);
+        Assert.Same(main, MonitorSelection.Select(State("Claude", W("seven_day", 0), W("seven_day_opus", 99), main)));
+        Assert.Same(main, MonitorSelection.Select(State("Claude", main, W("seven_day", 0))));
         Assert.Null(MonitorSelection.Select(State("Claude", W("seven_day_sonnet"))));
     }
 
@@ -71,7 +71,7 @@ public sealed class MonitorStateTests
     [Fact]
     public void SelectionPreservesStaleSnapshotForPresentationToLabel()
     {
-        var state = State("Claude", W("seven_day")) with { Status = ProviderStatus.Error, Failure = FailureKind.Network };
+        var state = State("Claude", W("five_hour")) with { Status = ProviderStatus.Error, Failure = FailureKind.Network };
         Assert.Same(state.Snapshot!.Windows[0], MonitorSelection.Select(state));
     }
 

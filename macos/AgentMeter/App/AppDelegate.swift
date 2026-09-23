@@ -8,6 +8,7 @@ import SwiftUI
   private var notch: NotchController!
   private var window: NSWindow!
   private var setupWindow: NSWindow?
+  private var checkWindow: NSWindow?
   private let setup = SetupFlow()
   private var status: NSStatusItem!
   private var schedule: Task<Void, Never>?
@@ -112,6 +113,9 @@ import SwiftUI
     let setupItem = NSMenuItem(title: "Setup AgentMeter…", action: #selector(openSetup), keyEquivalent: "")
     setupItem.target = self
     helpMenu.addItem(setupItem)
+    let checkItem = NSMenuItem(title: "Check Setup…", action: #selector(openCheckSetup), keyEquivalent: "")
+    checkItem.target = self
+    helpMenu.addItem(checkItem)
     helpItem.submenu = helpMenu
     main.addItem(helpItem)
     NSApp.mainMenu = main
@@ -197,6 +201,21 @@ import SwiftUI
     setupWindow?.makeKeyAndOrderFront(nil)
     NSApp.activate(ignoringOtherApps: true)
   }
+  @objc func openCheckSetup() {
+    guard !quitting else { return }
+    if checkWindow == nil {
+      let w = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 580, height: 390),
+        styleMask: [.titled, .closable], backing: .buffered, defer: false)
+      w.title = "Check Setup"
+      w.isReleasedWhenClosed = false
+      w.contentView = NSHostingView(rootView: CheckSetupView(model: model))
+      w.center()
+      checkWindow = w
+    }
+    checkWindow?.makeKeyAndOrderFront(nil)
+    NSApp.activate(ignoringOtherApps: true)
+    manualRefresh()
+  }
   @objc func openSettings() {
     openMain()
     model.destination = .settings
@@ -232,6 +251,7 @@ import SwiftUI
     status = nil
     window?.orderOut(nil)
     setupWindow?.orderOut(nil)
+    checkWindow?.orderOut(nil)
     let service = store!
     Task.detached {
       await service.stop()

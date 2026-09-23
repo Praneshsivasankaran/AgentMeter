@@ -71,8 +71,7 @@ struct SetupView: View {
     case .claude: providerInstructions(.claude)
     case .verify:
       heading("Check your setup", "One ready provider is enough. You can finish and return to setup anytime.")
-      statuses
-      checkAgain
+      CheckSetupView(model: model)
     case .preferences:
       Text("Make it yours").font(.title.bold())
       Text("These are the same preferences you’ll find in Settings.").foregroundStyle(.secondary)
@@ -157,5 +156,39 @@ private struct CommandBlock: View {
         }.accessibilityLabel("Copy \(title) command")
       }.padding(12).background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 8))
     }.onChange(of: command) { _, _ in copied = false }
+  }
+}
+
+struct CheckSetupView: View {
+  @Bindable var model: Presentation
+  @State private var copied = false
+  var body: some View {
+    VStack(alignment: .leading, spacing: 16) {
+      Text("Check Setup").font(.title2.bold())
+      Text("Checks use the same provider refresh as Usage. Unknown means this check could not verify that step.")
+        .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+      ForEach(ProviderID.allCases, id: \.self) { provider in
+        let snapshot = model.usage[provider] ?? UsageSnapshot(provider: provider)
+        VStack(alignment: .leading, spacing: 6) {
+          Text(provider == .claude ? "Claude Code" : "Codex").font(.headline)
+          Text(SetupStatus(snapshot: snapshot).rawValue)
+          Text(SetupDiagnostic(snapshot).summary).font(.caption).foregroundStyle(.secondary)
+        }
+      }
+      HStack {
+        Button("Check Again") { copied = false; model.refreshAction() }.disabled(model.manuallyRefreshing)
+        if model.manuallyRefreshing { ProgressView().controlSize(.small) }
+        Spacer()
+        Button(copied ? "Copied" : "Copy Diagnostics") {
+          let report = SetupDiagnostics.report(model.usage,
+            version: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String,
+            build: Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String)
+          NSPasteboard.general.clearContents()
+          copied = NSPasteboard.general.setString(report, forType: .string)
+        }
+      }
+      Text("Copies only app/OS versions, architecture and provider status categories. Nothing is uploaded.")
+        .font(.caption).foregroundStyle(.secondary)
+    }.padding(20)
   }
 }

@@ -171,7 +171,7 @@ private func reading(_ binding: String = "A") throws -> Reading {
           binding: "A",
           windows: [try window("five_hour", minutes: 300, used: 1), try window(used: 40)],
           date: Date())))
-    XCTAssertEqual(s.primary?.remaining, 60)
+    XCTAssertEqual(s.primary?.remaining, 99)
   }
   func testActivitySequencesBothOrdersAndDeduplication() {
     for first in [ProviderID.codex, .claude] {
@@ -566,5 +566,60 @@ private actor FakeSource: UsageSource {
     let plist = try XCTUnwrap(
       try PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any])
     XCTAssertFalse(plist.keys.contains { $0.hasSuffix("UsageDescription") })
+  }
+}
+
+final class ProductPassTests: XCTestCase {
+  func testClaudeCompactAlwaysFiveHourAndDetailsOrdered() throws {
+    for (short, long) in [(10.0, 80.0), (80.0, 10.0), (37.0, 19.0)] {
+      var s = UsageSnapshot(provider: .claude)
+      let five = try window("five_hour", minutes: 300, used: short)
+      let week = try window("seven_day", used: long)
+      s.apply(.success(.init(binding: "fixture", windows: [week, five], date: Date())))
+      XCTAssertEqual(s.primary?.remaining, 100 - short)
+      XCTAssertEqual(s.detailWindows.map(\.id), ["five_hour", "seven_day"])
+      XCTAssertEqual(ProviderGlance(snapshot: s).percentage, UsageSnapshot.percent(100 - short))
+    }
+  }
+  func testClaudeMissingUnknownDuplicateAndInvalidFiveHourNeverUseWeekly() throws {
+    var s = UsageSnapshot(provider: .claude)
+    let week = try window()
+    s.apply(.success(.init(binding: "fixture", windows: [week], date: Date())))
+    XCTAssertNil(s.primary)
+    XCTAssertEqual(ProviderGlance(snapshot: s).percentage, "--")
+    XCTAssertEqual(s.detailWindows.map(\.id), ["seven_day"])
+    let five = try UsageWindow(id: "five_hour", bucket: "claude", label: "", durationMinutes: 300, used: nil, reset: nil)
+    s.apply(.success(.init(binding: "fixture", windows: [five, week], date: Date())))
+    XCTAssertNil(s.primary?.remaining)
+    s.apply(.success(.init(binding: "fixture", windows: [five, five, week], date: Date())))
+    XCTAssertNil(s.primary)
+    XCTAssertThrowsError(try window("five_hour", minutes: 300, used: .nan))
+    XCTAssertThrowsError(try window("five_hour", minutes: 300, used: 101))
+  }
+  func testExpiredFiveHourDoesNotRefill() throws {
+    let five = try UsageWindow(id: "five_hour", bucket: "claude", label: "", durationMinutes: 300,
+      used: 80, reset: Date(timeIntervalSince1970: 1))
+    XCTAssertEqual(five.remaining, 20)
+    XCTAssertEqual(five.resetText(at: Date()), "Resetting…")
+  }
+  func testDiagnosticsNeverExportPayloadIdentityOrArbitraryMetadata() throws {
+    var s = UsageSnapshot(provider: .claude)
+    let secret = "private@example.test /Users/example/project secret-token"
+    s.apply(.success(.init(binding: secret, windows: [try UsageWindow(id: secret, bucket: secret,
+      label: secret, durationMinutes: 300, used: 20, reset: nil)], date: Date())))
+    let text = SetupDiagnostics.report([.claude: s], version: secret, build: "1.2\nsecret-token")
+    for forbidden in ["private", "secret-token", "@", "/Users", "20%"] { XCTAssertFalse(text.contains(forbidden)) }
+    XCTAssertTrue(text.contains("App version: unknown"))
+    XCTAssertTrue(text.contains("Authentication: verified"))
+    XCTAssertTrue(text.contains("[codex]\nDetected: unknown"))
+  }
+  func testReadinessDoesNotInferAuthenticationFromFailureOrStale() throws {
+    for state in [ProviderState.loading, .unavailable, .stale] {
+      let diagnostic = SetupDiagnostic(UsageSnapshot(provider: .codex, state: state))
+      XCTAssertEqual(diagnostic.authentication, "unknown")
+    }
+    XCTAssertEqual(SetupDiagnostic(UsageSnapshot(provider: .codex, state: .signedOut)).authentication, "signed-out")
+    XCTAssertEqual(SetupDiagnostic(UsageSnapshot(provider: .codex, state: .notInstalled)).detected, "no")
+    XCTAssertEqual(SetupDiagnostic(UsageSnapshot(provider: .codex, state: .live)).usage, "unavailable")
   }
 }
