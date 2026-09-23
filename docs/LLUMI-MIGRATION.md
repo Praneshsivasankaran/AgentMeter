@@ -24,3 +24,5 @@ Current versions remain macOS 1.1.1 and the existing Windows source candidate ve
 - Replace historical screenshots/demo only with real Llumi captures after physical review. Do not relabel old screenshots.
 - Review app icon on both platforms and accepted MSIX tile requirements.
 - Authorize fresh Developer ID signing and Apple notarization, final packaging and publication separately. Future Mac filename: `Llumi-1.1.1-macos.dmg`.
+
+Known Windows executable overrides use `LLUMI_CODEX_PATH` and `LLUMI_CLAUDE_PATH`; the former `AGENTMETER_CODEX_PATH` / `AGENTMETER_CLAUDE_PATH` names remain fallback aliases for compatibility. Discovery still validates the executable and rejects desktop-managed Claude paths.

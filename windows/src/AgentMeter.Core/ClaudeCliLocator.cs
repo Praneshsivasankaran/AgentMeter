@@ -12,7 +12,8 @@ public sealed record ClaudeCliSearchEnvironment(string? PathValue, string UserPr
         Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-        Environment.GetEnvironmentVariable("AGENTMETER_CLAUDE_PATH"));
+        Environment.GetEnvironmentVariable("LLUMI_CLAUDE_PATH")
+            ?? Environment.GetEnvironmentVariable("AGENTMETER_CLAUDE_PATH"));
 }
 
 public enum ClaudeCliOrigin { Standalone, DesktopManaged, VsCodeManaged }

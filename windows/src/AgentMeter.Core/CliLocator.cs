@@ -14,7 +14,8 @@ public sealed record CliSearchEnvironment(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
         RuntimeInformation.OSArchitecture,
-        Environment.GetEnvironmentVariable("AGENTMETER_CODEX_PATH"));
+        Environment.GetEnvironmentVariable("LLUMI_CODEX_PATH")
+            ?? Environment.GetEnvironmentVariable("AGENTMETER_CODEX_PATH"));
 }
 
 public static class CliLocator

@@ -37,7 +37,7 @@ public sealed class CodexProvider : IUsageProvider
             if (executable is null) return Complete(ProviderResult.Fail(FailureKind.NotInstalled), null);
             await using var process = startProcess(executable);
             var token = deadline.Token;
-            await process.SendAsync(new { id = 1, method = "initialize", @params = new { clientInfo = new { name = "agentmeter", version = "1.0.0" } } }, token).ConfigureAwait(false);
+            await process.SendAsync(new { id = 1, method = "initialize", @params = new { clientInfo = new { name = "llumi", version = "1.0.0" } } }, token).ConfigureAwait(false);
             await process.ReadRpcResultAsync(1, token).ConfigureAwait(false);
             await process.SendAsync(new { method = "initialized", @params = new { } }, token).ConfigureAwait(false);
             var before = await ReadAccountAsync(process, 2, token).ConfigureAwait(false);

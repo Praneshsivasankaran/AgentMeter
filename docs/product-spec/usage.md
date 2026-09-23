@@ -1,5 +1,5 @@
 # Usage
-Llumi is one product with native platform implementations. Its primary destinations are Usage and Settings. Provider names are Codex and Claude Code. The three ascending monochrome bars identify Llumi.
+Llumi is one product with native platform implementations. Its primary destinations are Usage and Settings. Provider names are Codex and Claude Code. The Raspberry semicircular gauge identifies Llumi; system status surfaces use its monochrome variant.
 
 Usage presents each provider's status, primary remaining percentage, slim progress, meaningful windows, reset information and observation age. Remaining means 100 minus verified used percentage. Unknown is a dash, never zero or full. Codex primary is the longest reported main/core window; extra/Spark buckets never substitute. Claude primary is seven_day, falling back to five_hour. Provider-defined supplementary names retain their meaning; nimbus_quill is excluded from user-facing windows, matching the current Mac presentation.
 
