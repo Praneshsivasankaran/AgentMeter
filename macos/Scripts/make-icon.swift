@@ -18,10 +18,13 @@ func draw(_ pixels: Int, light: Bool = false, mono: Bool = false) -> Data {
       : [NSColor(calibratedRed: 0.12, green: 0.13, blue: 0.16, alpha: 1).cgColor, NSColor(calibratedRed: 0.025, green: 0.035, blue: 0.045, alpha: 1).cgColor]
     context.drawLinearGradient(CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: colors as CFArray, locations: [0, 1])!, start: CGPoint(x:512,y:64), end:CGPoint(x:512,y:960), options: [])
     context.restoreGState()
+    // Keep the subtle glow inside the app tile; transparent corners remain truly clear.
+    context.addPath(background); context.clip()
   }
   let arc = CGMutablePath()
   arc.move(to: CGPoint(x:215,y:625))
-  arc.addCurve(to:CGPoint(x:809,y:625),control1:CGPoint(x:215,y:229),control2:CGPoint(x:809,y:229))
+  arc.addCurve(to:CGPoint(x:512,y:328),control1:CGPoint(x:215,y:461),control2:CGPoint(x:348,y:328))
+  arc.addCurve(to:CGPoint(x:809,y:625),control1:CGPoint(x:676,y:328),control2:CGPoint(x:809,y:461))
   let gauge = arc.copy(strokingWithWidth: 92, lineCap: .round, lineJoin: .round, miterLimit: 1)
   let ink = light ? NSColor(white:0.045,alpha:1) : NSColor(white:0.98,alpha:1)
   if !mono {
@@ -37,7 +40,7 @@ func draw(_ pixels: Int, light: Bool = false, mono: Bool = false) -> Data {
     context.drawLinearGradient(CGGradient(colorsSpace:CGColorSpaceCreateDeviceRGB(),colors:colors as CFArray,locations:[0,0.52,1])!,start:CGPoint(x:170,y:0),end:CGPoint(x:855,y:0),options:[])
   }
   context.restoreGState()
-  let needle=CGMutablePath();needle.move(to:CGPoint(x:478,y:598));needle.addLine(to:CGPoint(x:710,y:425));needle.addLine(to:CGPoint(x:548,y:653));needle.closeSubpath()
+  let needle=CGMutablePath();needle.move(to:CGPoint(x:480,y:607));needle.addLine(to:CGPoint(x:710,y:425));needle.addLine(to:CGPoint(x:548,y:653));needle.closeSubpath()
   context.setFillColor(ink.cgColor);context.addPath(needle);context.fillPath()
   context.fillEllipse(in:CGRect(x:464,y:587,width:100,height:100))
   NSGraphicsContext.restoreGraphicsState()
